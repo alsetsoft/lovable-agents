@@ -42,9 +42,11 @@ To make every collaborator on a project get these agents automatically, commit t
 
 ```json
 {
-  "extraKnownMarketplaces": [
-    { "source": "github", "repo": "alsetsoft/lovable-agents" }
-  ],
+  "extraKnownMarketplaces": {
+    "alsetsoft": {
+      "source": { "source": "github", "repo": "alsetsoft/lovable-agents" }
+    }
+  },
   "enabledPlugins": {
     "lovable-agents@alsetsoft": true
   }
@@ -88,6 +90,74 @@ claude plugin validate ./plugins/lovable-agents
 
 # load the plugin into a session straight from disk (no install)
 claude --plugin-dir ./plugins/lovable-agents
+```
+
+## Contributing
+
+Changes to these agents ship to every project that has the plugin installed, so they go through a pull request — no direct pushes to `main`.
+
+### Workflow
+
+1. **Branch off `main`.**
+
+   ```bash
+   git clone https://github.com/alsetsoft/lovable-agents.git
+   cd lovable-agents
+   git checkout -b fix/design-reviewer-alt-text
+   ```
+
+2. **Make your change** under `plugins/lovable-agents/`:
+   - Agents live in `agents/*.md` (Markdown + YAML frontmatter).
+   - The slash command lives in `commands/lovable.md`.
+
+3. **Bump the version — REQUIRED.** Edit `plugins/lovable-agents/.claude-plugin/plugin.json` and raise `version` following [SemVer](https://semver.org/):
+   - patch (`1.0.0` → `1.0.1`) — wording tweaks, small fixes;
+   - minor (`1.0.0` → `1.1.0`) — new agent or capability;
+   - major (`1.0.0` → `2.0.0`) — breaking change to how an agent behaves.
+
+   > ⚠️ **This is not optional.** Installs are cached by version (`~/.claude/plugins/cache/alsetsoft/lovable-agents/<version>/`). If you don't bump it, `/plugin update` sees the same version and keeps serving the old agents — your change never reaches anyone. **A PR that edits an agent without bumping the version will be rejected.**
+
+4. **Validate locally** before opening the PR:
+
+   ```bash
+   claude plugin validate ./plugins/lovable-agents
+   # optional: try it in a session straight from disk, no install
+   claude --plugin-dir ./plugins/lovable-agents
+   ```
+
+5. **Commit and push your branch:**
+
+   ```bash
+   git add -A
+   git commit -m "design-reviewer: require alt text on all images"
+   git push -u origin fix/design-reviewer-alt-text
+   ```
+
+6. **Open a pull request** against `main`:
+
+   ```bash
+   gh pr create --repo alsetsoft/lovable-agents --base main \
+     --title "design-reviewer: require alt text on all images" \
+     --body "What changed and why. Bumped version 1.0.0 -> 1.0.1."
+   ```
+
+   Or open it in the UI: https://github.com/alsetsoft/lovable-agents/pulls
+
+### PR checklist
+
+- [ ] Change is scoped to `plugins/lovable-agents/`.
+- [ ] **`version` in `plugin.json` is bumped** (SemVer).
+- [ ] `claude plugin validate ./plugins/lovable-agents` passes.
+- [ ] PR description says what changed and which version it bumps to.
+
+### After merge
+
+Once the PR is merged to `main`, anyone can pull the new version into their projects:
+
+```text
+/plugin marketplace update alsetsoft
+/plugin update lovable-agents@alsetsoft
+/reload-plugins
 ```
 
 ## Repository layout
