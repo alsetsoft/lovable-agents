@@ -94,7 +94,7 @@ claude --plugin-dir ./plugins/lovable-agents
 
 ## Contributing
 
-Changes to these agents ship to every project that has the plugin installed, so they go through a pull request — no direct pushes to `main`.
+Changes to these agents ship to every project that has the plugin installed, so they go through a pull request — no direct pushes to `main`, and **every PR needs at least one approval from another team member before it can be merged.** You may not merge your own PR unreviewed.
 
 ### Workflow
 
@@ -143,12 +143,21 @@ Changes to these agents ship to every project that has the plugin installed, so 
 
    Or open it in the UI: https://github.com/alsetsoft/lovable-agents/pulls
 
+7. **Get it reviewed — REQUIRED.** Request a reviewer and wait for **at least one approval from another team member**. Self-approval doesn't count; don't merge until someone else has signed off.
+
+   ```bash
+   gh pr edit --add-reviewer <teammate-github-username>
+   # merge only after the PR shows an approving review from someone else:
+   gh pr merge --squash
+   ```
+
 ### PR checklist
 
 - [ ] Change is scoped to `plugins/lovable-agents/`.
 - [ ] **`version` in `plugin.json` is bumped** (SemVer).
 - [ ] `claude plugin validate ./plugins/lovable-agents` passes.
 - [ ] PR description says what changed and which version it bumps to.
+- [ ] **At least one approval from another team member** (not the author).
 
 ### After merge
 
