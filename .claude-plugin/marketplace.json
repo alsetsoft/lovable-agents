@@ -1,0 +1,14 @@
+{
+  "name": "alsetsoft",
+  "owner": {
+    "name": "alsetsoft"
+  },
+  "description": "alsetsoft shared Claude Code plugins",
+  "plugins": [
+    {
+      "name": "lovable-agents",
+      "source": "./plugins/lovable-agents",
+      "description": "Lovable-style app builder: orchestrator + design-system, component, page-assembler, design-reviewer and project-init agents, plus the /lovable command."
+    }
+  ]
+}
