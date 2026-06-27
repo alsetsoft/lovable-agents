@@ -34,40 +34,45 @@ Skip any step whose artifact already exists. Don't re-scaffold over a real proje
   "name": "lovable-app",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "dev": "next dev -p 8080",
     "build": "next build",
     "start": "next start -p 8080",
-    "lint": "next lint",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "next": "^14.2.15",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "class-variance-authority": "^0.7.0",
+    "next": "^16.2.9",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "tailwind-merge": "^2.5.0",
-    "tailwindcss-animate": "^1.0.7",
-    "lucide-react": "^0.441.0",
-    "sonner": "^1.5.0",
-    "@radix-ui/react-slot": "^1.1.0",
-    "@supabase/supabase-js": "^2.45.0",
-    "@tanstack/react-query": "^5.56.0"
+    "tailwind-merge": "^3.6.0",
+    "lucide-react": "^1.21.0",
+    "sonner": "^2.0.7",
+    "@radix-ui/react-slot": "^1.3.0",
+    "@supabase/supabase-js": "^2.108.0",
+    "@tanstack/react-query": "^5.101.0"
   },
   "devDependencies": {
-    "@types/node": "^22.5.0",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.41",
-    "tailwindcss": "^3.4.10",
-    "typescript": "^5.5.3"
+    "@tailwindcss/postcss": "^4.3.1",
+    "@types/node": "^26.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "postcss": "^8.5.15",
+    "tailwindcss": "^4.3.1",
+    "tw-animate-css": "^1.4.0",
+    "typescript": "^6.0.3"
   }
 }
 ```
 
-Do **not** set `"type": "module"` — Next config files use the explicit `.mjs` extension and PostCSS uses CommonJS below.
+This scaffold is **ESM-first** (`"type": "module"`): config files use `import`/`export`, never `require()`. Next config is `next.config.mjs`, PostCSS config is `postcss.config.mjs`, and `tailwind.config.ts` is an ESM module. **Notable upgrades the other agents rely on:**
+
+- **Next.js 16** (App Router, Turbopack by default). `next lint` was removed in 16 — static checks run through `tsc --noEmit` (the `typecheck` script), not a `lint` script.
+- **React 19** — `react`/`react-dom`/`@types/react`/`@types/react-dom` are all on 19.
+- **Tailwind CSS v4** — uses the `@tailwindcss/postcss` PostCSS plugin and `@import "tailwindcss"` in CSS (no `@tailwind base/components/utilities`, no `autoprefixer`, no `postcss-import` — v4 bundles those). The old `tailwindcss-animate` plugin is replaced by `tw-animate-css`, imported from CSS (so `tailwind.config.ts` has `plugins: []`).
+- **TypeScript 6** — `baseUrl` is removed from `tsconfig.json` (deprecated in TS 6); `paths` resolve relative to the config file without it.
 
 ### 2. `next.config.mjs`
 
@@ -83,7 +88,7 @@ export default nextConfig;
 ```json
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2022",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
@@ -97,7 +102,6 @@ export default nextConfig;
     "jsx": "preserve",
     "incremental": true,
     "plugins": [{ "name": "next" }],
-    "baseUrl": ".",
     "paths": { "@/*": ["./src/*"] }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
@@ -105,10 +109,18 @@ export default nextConfig;
 }
 ```
 
-### 4. `postcss.config.js`
+No `baseUrl` — it's deprecated in TypeScript 6, and `paths` resolve relative to `tsconfig.json` without it. (Next.js rewrites `jsx` to `react-jsx` on first build; that's expected.)
+
+### 4. `postcss.config.mjs`
+
+Tailwind v4 ships its own PostCSS plugin (which also handles imports + vendor prefixing), so there's no `tailwindcss`/`autoprefixer` entry:
 
 ```js
-module.exports = { plugins: { tailwindcss: {}, autoprefixer: {} } };
+const config = {
+  plugins: { "@tailwindcss/postcss": {} },
+};
+
+export default config;
 ```
 
 ### 5. `tailwind.config.ts`
@@ -117,23 +129,23 @@ module.exports = { plugins: { tailwindcss: {}, autoprefixer: {} } };
 import type { Config } from "tailwindcss";
 
 export default {
-  darkMode: ["class"],
+  darkMode: "class",
   content: ["./src/**/*.{ts,tsx}"],
   theme: { extend: {} },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [],
 } satisfies Config;
 ```
 
-`lovable-design-system` rewrites the `theme.extend` with real tokens.
+`lovable-design-system` rewrites the `theme.extend` with real tokens. The project is ESM, so **never `require()` here** (e.g. no `require("tailwindcss-animate")`) — animations come from the `tw-animate-css` import in `globals.css`, so `plugins` stays `[]`. In Tailwind v4 this JS config is wired in via the `@config` directive in `globals.css` (step 6).
 
 ### 6. `src/app/globals.css`
 
-Stub — `lovable-design-system` will rewrite this with real tokens. Just leave:
+Stub — `lovable-design-system` will rewrite this with real tokens. Tailwind v4 replaces the three `@tailwind` directives with a single `@import "tailwindcss"`; `tw-animate-css` provides the shadcn enter/exit animations, and `@config` points Tailwind at the JS config above:
 
 ```css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "tw-animate-css";
+@config "../../tailwind.config.ts";
 ```
 
 ### 7. `src/app/layout.tsx` (Server Component — the root layout)

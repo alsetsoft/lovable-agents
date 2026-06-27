@@ -29,7 +29,9 @@ Grep for `style={{` near `color:`, `background:`, `border:`, `fill:`, `stroke:`.
 
 ### 3. Raw colors in CSS vars (BLOCKER)
 
-Grep `src/index.css` for `rgb(`, `rgba(`, `#[0-9a-fA-F]{3,8}` inside CSS variable definitions. CSS vars must be HSL triples like `262 83% 58%`.
+Grep `src/app/globals.css` for `rgb(`, `rgba(`, `#[0-9a-fA-F]{3,8}` inside CSS variable definitions. CSS vars must be HSL triples like `262 83% 58%`.
+
+Also flag **legacy Tailwind v3 syntax** in `src/app/globals.css` (this stack is Tailwind v4): the directives `@tailwind base;` / `@tailwind components;` / `@tailwind utilities;` must be replaced by a single `@import "tailwindcss";` (plus `@import "tw-animate-css";` and `@config "../../tailwind.config.ts";`). Likewise flag a `require(` in `tailwind.config.ts` (the project is ESM — animations come from the `tw-animate-css` import, so `plugins: []`) and `darkMode: ["class"]` (v4 wants the string `darkMode: "class"`).
 
 ### 4. shadcn outline buttons with light text (BLOCKER)
 
