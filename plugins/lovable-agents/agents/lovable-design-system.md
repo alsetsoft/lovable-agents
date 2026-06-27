@@ -41,9 +41,9 @@ You typically rewrite both files. They're short — use `Write`, not multiple `E
 ```css
 @import url('https://fonts.googleapis.com/css2?family=...&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "tw-animate-css";
+@config "../../tailwind.config.ts";
 
 @layer base {
   :root {
@@ -122,7 +122,7 @@ You typically rewrite both files. They're short — use `Write`, not multiple `E
 import type { Config } from "tailwindcss";
 
 export default {
-  darkMode: ["class"],
+  darkMode: "class",
   content: ["./src/**/*.{ts,tsx}"],
   theme: {
     container: { center: true, padding: "1.5rem", screens: { "2xl": "1280px" } },
@@ -165,9 +165,16 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [],
 } satisfies Config;
 ```
+
+## Tailwind v4 notes (this stack)
+
+- `globals.css` starts with `@import "tailwindcss"` (not the three `@tailwind` directives), then `@import "tw-animate-css"` (shadcn enter/exit animations, replacing the old `tailwindcss-animate` plugin), then `@config "../../tailwind.config.ts"` to wire in the JS config below.
+- The project is **ESM** (`"type": "module"`), so the config uses `import`/`export` and **no `require()`** — `plugins` stays `[]`. `darkMode` is the string `"class"` (the v4 types reject the `["class"]` array form).
+- HSL-triple CSS variables + `hsl(var(--x))` references in `theme.extend` work exactly as before via the `@config` bridge — keep the token approach in the Hard Rules above.
+- `@layer base` / `@layer utilities` blocks and `@apply` all work unchanged in v4.
 
 ## Process
 
