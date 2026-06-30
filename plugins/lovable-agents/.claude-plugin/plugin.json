@@ -1,7 +1,7 @@
 {
   "name": "lovable-agents",
   "description": "Lovable-style Next.js + TS + Tailwind + shadcn app builder. Bundles the lovable orchestrator and its sub-agents plus the /lovable command.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": {
     "name": "alsetsoft"
   },
