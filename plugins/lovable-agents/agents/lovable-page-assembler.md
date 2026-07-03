@@ -91,6 +91,24 @@ src/app/not-found.tsx       → 404
 
 A persistent shell (nav/sidebar) goes in `src/app/layout.tsx` (or a nested `layout.tsx`) wrapping `{children}`. Links are `<Link href>` from `next/link`; programmatic navigation is `useRouter()` from `next/navigation`. Don't add routes the user didn't ask for.
 
+### Create & edit are routes, not modals
+
+Every editable entity gets three routes — the create and edit forms are **full screens**, never dialogs/sheets:
+
+```
+src/app/<entity>/page.tsx        → /<entity>        (list)
+src/app/<entity>/new/page.tsx    → /<entity>/new    (create form)
+src/app/<entity>/[id]/page.tsx   → /<entity>/:id    (edit form)
+```
+
+- The `new`/`[id]` route pages are thin: they render the entity's form component (a `"use client"` component, e.g. `src/components/<entity>/<entity>-form.tsx`). The `[id]` page passes the id through (`const { id } = await params` in a server page, or `useParams()` in a client one); the form fetches that record via TanStack Query and shows a `Skeleton` while loading.
+- The static `new` segment naturally takes precedence over the dynamic `[id]` segment — no conflict.
+- The list view's **"+ New" button and row click navigate** to these routes (`router.push("/<entity>/new")`, `router.push("/<entity>/" + row.id)`) — they must NOT toggle a dialog/sheet open.
+- On save/cancel/delete the form `invalidateQueries(["<entity>"])` and `router.push("/<entity>")` back to the list.
+- New-form context (e.g. a default type or a pre-selected parent) is passed via query params read server-side: `/<entity>/new?type=bundle&group=<id>` → `const sp = await searchParams`.
+- A shared form shell (`src/components/form-shell.tsx`: a header with a back button + title over a centered content column) keeps every form screen consistent. The form supplies its own footer (Cancel / Save, plus Delete in edit mode).
+- **The only popup allowed in this flow is a confirmation** (shadcn `AlertDialog`) guarding a destructive action like delete. Create/edit form bodies never live in a modal.
+
 ## Data Fetching (CRM/ERP)
 
 List and detail pages fetch **client-side** with TanStack Query against Supabase. Keep the query in a hook (`src/hooks/use-contacts.ts`) and pass paged data + state into the presentational list component — the page owns data, the component owns presentation.
@@ -126,6 +144,7 @@ List and detail pages fetch **client-side** with TanStack Query against Supabase
 - **No env vars** in app code; inline the public Supabase keys.
 - **SEO via the Metadata API**: set `title`, `description`, `openGraph`, `twitter`, and `alternates.canonical` on the root `layout.tsx` and override per route as needed. There is no `index.html`.
 - **Data is client-side.** List/detail pages fetch via TanStack Query + Supabase with loading skeletons and `.range()` pagination — see *Data Fetching* above, inside `"use client"` components.
+- **Create/edit are dedicated routes, not modals.** Wire `/<entity>/new` and `/<entity>/[id]` pages; the list navigates to them. Popups are only for delete confirmation — see *Create & edit are routes, not modals* above.
 
 ## Process
 

@@ -34,6 +34,7 @@ Orchestrator gives you: the user's request, the design tokens chosen (colors, gr
 12. **Always render loading / empty / error states.** List and detail components account for `isLoading`, `isError`, and empty data. Show shadcn `Skeleton` rows (desktop) / skeleton cards (mobile) while loading — never a blank flash. Empty state = friendly message + a primary action.
 13. **Never paginate or filter the full dataset in the client.** Presentational components receive already-paged data + paging callbacks as props; the page/hook owns the Supabase `.range()` query. Don't `.slice()` a giant array for pages.
 14. **Mark client components** (Next.js App Router): any component using hooks (`useState`/`useEffect`/TanStack Query/React Hook Form), event handlers, refs, or browser APIs must start with `"use client"`. shadcn primitives that use Radix/hooks need it too. Purely presentational, static components can stay server components.
+15. **Create/edit forms are full-screen components, never dialogs.** An entity's form (`<Entity>Form`) renders as a page body — wrapped in the shared `form-shell.tsx` (header with back button + title) — that the `/<entity>/new` and `/<entity>/[id]` routes mount. Do NOT build create/edit inside `Dialog`/`Sheet`/`Drawer`. The form takes an optional id (edit mode → fetch the record via TanStack Query, `Skeleton` while loading; no id → create with sensible defaults); on save/cancel/delete it `invalidateQueries` and `useRouter().push("/<entity>")`. List components trigger create/edit by **navigating** (`router.push` / `<Link>`), not by opening a modal. The **only** dialog allowed here is a confirmation for a destructive action — wrap delete in a shadcn `AlertDialog` (or a small `ConfirmDialog` helper). Inline-edit tiny things (rename a tree node, edit one cell) in place instead of opening anything.
 
 ## Workflow
 
@@ -68,6 +69,14 @@ A record list (e.g. `ContactsTable`, `OrdersList`) should have:
 - Mobile: a `RecordCard` stack inside `md:hidden` — key fields stacked, primary action reachable by thumb.
 - A `loading` (or `isLoading`) prop driving `Skeleton` rows/cards; a distinct empty state; an error state.
 - Pagination controls (Prev/Next or page numbers) that call back to the parent — the parent owns the Supabase query. The component never slices a full array.
+- A "+ New" action and row clicks that **navigate** to the create/edit routes — never open a modal.
+
+A create/edit form (e.g. `ContactForm`, `OrderForm`) should have:
+- A `"use client"` directive and an optional id prop. With an id (edit) it fetches the record via TanStack Query and shows `Skeleton` while loading; without one (create) it starts from defaults.
+- The body wrapped in the shared `form-shell.tsx` (back button + title + centered column) — it is a screen, not a `Dialog`/`Sheet`.
+- React Hook Form + zod validation, semantic-token styling, inline field errors.
+- A footer: Cancel (navigates back) + Save; in edit mode also a Delete guarded by a confirmation `AlertDialog` — the one and only popup in the flow.
+- On success: `toast` feedback, `invalidateQueries`, then `router.push("/<entity>")`.
 
 ## Reporting Back
 
