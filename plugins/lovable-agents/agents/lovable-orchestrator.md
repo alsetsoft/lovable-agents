@@ -43,9 +43,10 @@ Use the `Agent` tool to dispatch. Run independent agents **in parallel** (single
 | 2 | `lovable-design-system` | Author `src/app/globals.css` + `tailwind.config.ts` with HSL semantic tokens, gradients, shadows, animations. **CRITICAL — must run before any components.** |
 | 3a | `lovable-component-builder` | Build shadcn variants + custom components using the design system. |
 | 3b | `lovable-page-assembler` | Assemble pages with semantic HTML + SEO + responsive layout. |
+| 3c | `lovable-db-snapshot` | Refresh `snapshots/db/` (schema.sql + SCHEMA.md) — dispatch whenever this build touched the database schema (tables, RLS policies, functions, migrations). |
 | 4 | `lovable-design-reviewer` | Audit for direct color usage, missing semantic tokens, contrast issues, missing alt text, SEO gaps. Fix what it finds. |
 
-Step 3a and 3b can run in parallel once the design system exists. Step 2 must complete before step 3.
+Step 3a and 3b can run in parallel once the design system exists. Step 2 must complete before step 3. Step 3c runs before step 4 whenever the schema changed, so the reviewer audits an up-to-date snapshot.
 
 When delegating, give each agent: (1) the user's original request verbatim, (2) the design tokens you chose, (3) the specific files/components it owns, (4) any constraints the user mentioned, (5) the *CRM / ERP Data Patterns* below for any agent that touches record lists or detail views. Don't make agents re-derive context you already have.
 
@@ -78,6 +79,14 @@ This is a CRM/ERP. Any view that lists records (contacts, deals, orders, invoice
 - **Create & edit happen on dedicated screens — NOT in modals.** A list and its forms are separate routes: list at `/<entity>`, create at `/<entity>/new`, edit at `/<entity>/[id]`. The "+ New" button and a row click **navigate** (`useRouter().push(...)` / `<Link>`) — they never open a dialog/sheet. The form is a `"use client"` component the route page renders; in edit mode it reads `[id]` and fetches the record via TanStack Query (`Skeleton` while loading), and on save/cancel/delete it `invalidateQueries` then `router.push("/<entity>")`. **Popups (`AlertDialog`) are reserved for confirming destructive actions only** (e.g. "Delete X?") — never for create/edit content. Tiny sub-entity tweaks (rename a tree node, edit a single cell) use inline editing in place, not a popup.
 
 Data layer = **Supabase (`@supabase/supabase-js`) + TanStack Query (`@tanstack/react-query`)**. The Supabase client lives in `src/integrations/supabase/client.ts` with the project URL + publishable key inlined (the key is public — this is NOT an env var).
+
+## Database Snapshot Rule (enforce whenever the schema changes)
+
+Any project wired to Supabase — or a similar Postgres-based provider (Neon, Nhost, self-hosted Postgres) — keeps an in-repo snapshot of the database schema in **`snapshots/db/`**: `schema.sql` (full DDL) + `SCHEMA.md` (readable summary). It is the source of truth agents read for table names, columns, and relationships — never guess schema when the snapshot exists.
+
+- Whenever a build/edit **changes the schema** (creates/alters tables, adds RLS policies, functions, triggers, enums, applies a migration), dispatch `lovable-db-snapshot` to refresh `snapshots/db/` **before** the final `lovable-design-reviewer` pass.
+- When wiring a database into a project for the **first time**, dispatch `lovable-db-snapshot` as part of that same build.
+- The snapshot is schema-only (no row data) and must never contain secrets.
 
 ## When NOT to Build
 

@@ -15,6 +15,7 @@ A single plugin, `lovable-agents`, bundling:
 | `lovable-design-system` | Authors the design system: `globals.css` tokens + `tailwind.config.ts`. |
 | `lovable-component-builder` | Builds individual React + TS components from the design system. |
 | `lovable-page-assembler` | Assembles full pages, SEO metadata, semantic landmarks, routes. |
+| `lovable-db-snapshot` | Keeps an in-repo snapshot of the DB schema (`snapshots/db/schema.sql` + `SCHEMA.md`) for Supabase-like providers; runs after any schema change. |
 | `lovable-design-reviewer` | Audits and fixes design-system / SEO violations as the final step. |
 
 Plus the `/lovable` slash command, which kicks off the orchestrator from a single prompt.
