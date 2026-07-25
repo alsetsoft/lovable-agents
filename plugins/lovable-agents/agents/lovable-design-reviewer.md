@@ -69,6 +69,16 @@ For any view that lists records:
 - **Client-component correctness** (Next App Router): any file using hooks/handlers/browser APIs starts with `"use client"`. Flag a component using `useState`/`useQuery`/`onClick` without the directive. Flag `react-router-dom`, `BrowserRouter`, `index.html`, or `src/main.tsx` — those are Vite artifacts that must not exist.
 - **Create/edit on routes, not modals.** Create and edit forms must be dedicated screens (`/<entity>/new`, `/<entity>/[id]`), not dialogs/sheets. Grep for `Dialog`/`Sheet`/`Drawer` imports/usages (`@/components/ui/dialog`, `@/components/ui/sheet`, `<Dialog`, `<Sheet`) and inspect each: if it wraps a create/edit form (form fields, `useForm`, "Save"/"Create"/"Edit"/Save handlers, multiple inputs) it is a **violation** — convert it to a `/<entity>/new` + `/<entity>/[id]` route pair rendered through `form-shell.tsx`, and make the list navigate (`router.push`/`<Link>`) instead of toggling open state. A `Dialog`/`AlertDialog` is **only** allowed when it guards a destructive confirmation (a short "Delete X?" with a confirm/cancel and no form fields). Also confirm that for each list view there exist matching `new/page.tsx` and `[id]/page.tsx` routes; a "+ New" button wired to `setOpen(true)` instead of navigation is a violation.
 
+### 9. Database snapshot (BLOCKER when a DB is wired)
+
+If the project talks to Supabase or a similar Postgres provider (grep for `supabase.from(` or a client in `src/integrations/supabase/`):
+
+- `snapshots/db/schema.sql` **and** `snapshots/db/SCHEMA.md` must exist.
+- Staleness check: every table name used in code via `supabase.from("...")` / `.from('...')` must appear in `snapshots/db/schema.sql`. A table referenced in code but missing from the snapshot = stale snapshot (or code targeting a table that doesn't exist — either way, a violation).
+- Secret check: grep `snapshots/db/` for `postgres://`, `postgresql://`, `service_role`, `SUPABASE_SERVICE` — the snapshot must contain no credentials.
+
+You **cannot** regenerate the snapshot yourself (it needs DB access) — report the gap to the orchestrator so it dispatches `lovable-db-snapshot`. Never invent schema to fill the file.
+
 ## Process
 
 1. Start with the BLOCKER greps in **parallel** (one message).
