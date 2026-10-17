@@ -162,6 +162,8 @@ Existing projects are detected as `css-first` or `legacy-config` (Tailwind v4 + 
 
 The builder implements and the reviewer greps for generic CRUD bugs: double submit (ref-based submit lock held through navigation), Radix `Select` spurious `onValueChange("")` wiping form values, negative numbers via paste, native date inputs in non-English locales, archived records offered in new selections, user search text interpolated into PostgREST filters, open redirects via `?from=`, out-of-range pages (416), truncated text without tooltips.
 
+Keyboard & accessibility (backoffice): one `useHotkey` hook (letters matched by physical key, so shortcuts work on non-Latin layouts) — `Ctrl/⌘+S` saves through validation and the submit lock, `/` focuses search, `Esc` closes (first Esc leaves a field); clickable table rows contain a real link (Tab, Enter, Ctrl/⌘-click → new tab); `aria-sort` on sortable headers; skip link and focus to the page title after navigation; visible focus rings; status never shown by color alone. Reviewer section 14 audits it.
+
 ## Auto-install for a project (team-wide)
 
 To make every collaborator on a project get these agents automatically, commit this to the project's `.claude/settings.json`:

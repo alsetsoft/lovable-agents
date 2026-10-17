@@ -37,7 +37,7 @@ Orchestrator gives you: the user's request, the profile + `policy.json`, the des
 5. **One component per file.** Path: `src/components/<Name>.tsx` (or `src/components/<entity>/<name>.tsx` for entity screens). Unique filenames. No barrel index dumps.
 6. **Responsive.** Marketing: mobile-first, stack on mobile, grid on desktop. Backoffice: desktop-first and dense, still usable on a tablet.
 7. **Motion** per `ui.motion`: `rich` → `animate-fade-in-up` on hero copy with staggered delays, `animate-float` on hero visuals, `hover:scale-[1.02] transition-all duration-300 ease-smooth` on cards. `minimal` → only state transitions (hover/focus colors, skeleton shimmer); no entrance animations on data screens.
-8. **Accessibility.** Icon-only buttons need `aria-label`. Images need `alt`. Use semantic elements, not `<div>` everywhere. Form labels are real `<label>`s bound to their control.
+8. **Accessibility** (details in *Keyboard & accessibility* below). Icon-only buttons need `aria-label`. Images need `alt`. Use semantic elements, not `<div>` everywhere. Form labels are real `<label>`s bound to their control.
 9. **Toasts** for user feedback — import from `@/components/ui/sonner` or `@/hooks/use-toast` depending on what's installed. Errors: `toast.error(title, { description: error.message })`.
 10. **Supabase client** only from `@/integrations/supabase/client` — never construct one in a component, never read `process.env` in components.
 11. **Record lists = the shared data table.** No hand-rolled `<table>` per page. When `ui.mobileCards` is true, render the responsive pair: table inside `hidden md:block`, a stack of `Card`s inside `md:hidden` — same data.
@@ -76,6 +76,86 @@ When the task is a fix or behaviour change (from the orchestrator, a bug report,
 5. Report the inventory and what changed, and give the orchestrator the registry entry (rule · primitive · detection grep) for `conventions.md`.
 
 If the user explicitly scoped the change to one screen, do only that screen — but list the other occurrences you found so they can decide.
+
+## Keyboard & accessibility (audited by the reviewer, section 14)
+
+People who work in the app all day use the keyboard. Everything below is generic — no app-specific shortcuts beyond this set.
+
+**One hotkey hook.** All shortcuts go through `src/hooks/use-hotkey.ts` (create it if missing; never `addEventListener("keydown")` in a feature component):
+
+```ts
+"use client";
+
+import { useEffect, useEffectEvent } from "react";
+
+type Options = { enabled?: boolean; allowInInputs?: boolean };
+
+// combo: "mod+s" (Ctrl on Win/Linux, Cmd on macOS), "/", "escape", "alt+n"
+export function useHotkey(combo: string, handler: (e: KeyboardEvent) => void, { enabled = true, allowInInputs = false }: Options = {}) {
+  const onHotkey = useEffectEvent(handler);
+  useEffect(() => {
+    if (!enabled) return;
+    const parts = combo.toLowerCase().split("+");
+    const key = parts.pop()!;
+    const want = { mod: parts.includes("mod"), alt: parts.includes("alt"), shift: parts.includes("shift") };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || e.isComposing || e.repeat) return;
+      if (want.mod !== (e.metaKey || e.ctrlKey) || want.alt !== e.altKey || want.shift !== e.shiftKey) return;
+      // physical key for letters/digits (works on Cyrillic/Greek layouts), e.key for symbols
+      const hit =
+        key.length === 1 && /[a-z0-9]/.test(key) ? e.code === (/\d/.test(key) ? `Digit${key}` : `Key${key.toUpperCase()}`)
+        : key === "/" ? e.key === "/" || e.code === "Slash"
+        : e.key.toLowerCase() === key;
+      if (!hit) return;
+      const t = e.target as HTMLElement | null;
+      const typing = !!t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+      if (typing && !allowInInputs) {
+        if (key === "escape") t!.blur(); // first Esc leaves the field, the next one acts
+        return;
+      }
+      // an open dialog/popover/menu owns Escape and its own shortcuts
+      if (key === "escape" && document.querySelector('[role="dialog"][data-state="open"], [role="menu"][data-state="open"], [data-radix-popper-content-wrapper]')) return;
+      e.preventDefault();
+      onHotkey(e);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [combo, enabled, allowInInputs]);
+}
+```
+
+Letters are matched by physical key (`e.code`), so `mod+s` also works on Cyrillic, Greek or other non-Latin layouts; `e.key` comparisons for letter shortcuts are a bug.
+
+**Shortcut set** (`backoffice`; `marketing` only needs the a11y basics):
+
+| Keys | Where | Does |
+|------|-------|------|
+| `Ctrl/⌘+S` | form shell | `document.getElementById(FORM_ID)?.requestSubmit()` (`allowInInputs: true`) — goes through validation and the submit lock; never bypasses them |
+| `/` | list toolbar | focus the search input |
+| `Esc` | form shell / detail screen | same as the Close button (incl. the unsaved-changes guard); inside a field the first Esc only blurs it; ignored while a dialog/popover/menu is open |
+| `Alt+N` | list | same as "+ New" (optional) |
+| `Enter` / `↑` `↓` | table rows | open the focused row / move between rows (optional) |
+
+Show the shortcut in the button's tooltip (`Save · Ctrl+S`, `⌘S` on macOS via `navigator.platform`/`userAgentData`), localized like any other string.
+
+**Tables**
+- A clickable row must be reachable and operable by keyboard: render the row's primary cell as a real `<Link href>` to the record (gives Tab focus, Enter, Ctrl/⌘-click and middle-click → new tab) and keep the row `onClick` for mouse convenience; the row handler ignores clicks that started on an interactive element and opens a new tab on Ctrl/⌘/middle click. A `<tr onClick>` with nothing focusable inside is a bug.
+- Sortable headers: `<TableHead aria-sort="ascending|descending|none">` wrapping a `<button>` (label = column name, state announced by `aria-sort`); non-sortable headers have no `aria-sort`.
+- Selection checkboxes have an `aria-label` ("Select row <name>", "Select all on page").
+
+**Forms**
+- Every control has a real `<label>`/`FormLabel` bound to it; required fields marked visually and with `aria-required`; errors linked via `aria-describedby` (shadcn `FormMessage` does this — don't hand-roll error text).
+- Keep react-hook-form's `shouldFocusError` (default) so the first invalid field gets focus; custom inputs (comboboxes, date pickers) pass `ref` to their focusable element so that works.
+- Destructive confirm dialogs keep the default initial focus on Cancel; never `autoFocus` the destructive button.
+
+**Shell & focus**
+- App shell renders a "Skip to content" link (`sr-only focus:not-sr-only`) targeting `<main id="main" tabIndex={-1}>`.
+- After client-side navigation, if focus was on `<body>` or the clicked link is gone, move focus to the page `<h1 tabIndex={-1}>` (one effect in the shell, keyed on `usePathname()`).
+- Never remove the focus outline without a replacement: `outline-none`/`outline-hidden` only together with `focus-visible:ring-*` (shadcn primitives already do this).
+
+**Color & motion**
+- Status is never color alone: badge text or icon carries the meaning; text contrast ≥ 4.5:1 on its background in light and dark.
+- Respect `prefers-reduced-motion` for anything beyond color/opacity transitions (`motion-safe:` prefix).
 
 ## Workflow
 

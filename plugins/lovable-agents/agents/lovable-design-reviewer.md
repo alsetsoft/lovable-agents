@@ -26,6 +26,7 @@ You are the **final-pass reviewer** for a Lovable-style build. You enforce the r
 | 11 Canon conformance | WARN | WARN (BLOCKER for reinvented primitives) |
 | 12 DB snapshot | BLOCKER when a DB is wired | BLOCKER when a DB is wired |
 | 13 Pattern consistency | WARN | BLOCKER for registered patterns, WARN for unregistered divergence |
+| 14 Keyboard & accessibility | WARN | BLOCKER for unreachable rows / removed focus rings, else WARN |
 
 ## Audit Checklist
 
@@ -149,6 +150,22 @@ The same kind of data or interaction must behave the same on every screen.
 - **The change under review.** If this build fixed or changed a behaviour in one place, grep for the same data shape elsewhere (the column/flag, the queried table, the formatter, the copy text). Occurrences still on the old behaviour = BLOCKER — the fix was applied to an instance, not the pattern.
 - **Unregistered divergence.** Look for the same thing solved twice: ≥ 2 components picking records of the same table with different markup; ≥ 2 formatters for the same kind of value; status colors defined in more than one place; different "archived"/"inactive" handling across selects, filters and lists; different confirm-dialog wording for the same action. Report each cluster (`files — how they differ`) as WARN and propose a registry entry; unify it when the fix is mechanical.
 - Missing `## Patterns` section in a project with ≥ 2 entities → report it so the orchestrator creates it.
+
+### 14. Keyboard & accessibility
+
+Rules: component-builder → *Keyboard & accessibility*. Greps (open each hit and judge):
+
+- **Unreachable rows.** `<tr`/`<TableRow` with `onClick` and no `<Link`/`href`/`tabIndex` inside the row → BLOCKER (backoffice), WARN (marketing).
+- **Clickable non-controls.** `<div`/`<span` with `onClick` and no `role=` + `tabIndex` + key handler → WARN (prefer a `<button>`/`<Link>`).
+- **Sort headers.** Header cells wired to the sort callback without `aria-sort`, or a sort trigger that isn't a `<button>` → WARN.
+- **Focus rings.** `outline-none`/`outline-hidden` in a className without `focus-visible:` in the same className (outside `src/components/ui/`) → BLOCKER.
+- **Shortcuts.** `addEventListener("keydown"` / `onKeyDown` handling Ctrl/⌘ combos outside `use-hotkey.ts` → WARN (one hook); letter shortcuts compared with `e.key === "s"` → WARN (breaks on non-Latin layouts, use `e.code`); a form shell without `mod+s`, a list toolbar without `/`, a detail screen without `Esc` → WARN (backoffice only); `Ctrl+S` that calls the save function directly instead of `requestSubmit()` → BLOCKER (bypasses validation and the submit lock).
+- **Dialogs.** `autoFocus` on a destructive action inside `AlertDialog` → WARN.
+- **Shell.** No skip link / `<main id>` in the app shell, no focus-to-`<h1>` on navigation → WARN.
+- **Labels.** `<Input`/`<Select`/`<Checkbox` without an associated label or `aria-label` (incl. table selection checkboxes) → WARN.
+- **Color only.** Status shown only as a colored dot/background with no text or icon → WARN.
+
+If `lovable-visual-qa` is available it runs axe-core on real pages — leave runtime contrast/ARIA checks to it and keep this section to what code reveals.
 
 ## Process
 
