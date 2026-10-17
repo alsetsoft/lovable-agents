@@ -18,6 +18,7 @@ A single plugin, `lovable-agents`, bundling:
 | `lovable-db-snapshot` | Keeps an in-repo snapshot of the DB schema (`snapshots/db/schema.sql` + `SCHEMA.md`) for Supabase-like providers; runs after any schema change. |
 | `lovable-design-reviewer` | Code audit: tokens & stack, policy, the pattern skills' *Audit* tables (CRUD hardening), canon, pattern consistency, keyboard & a11y, DB snapshot, (marketing) SEO. Fixes what it finds. |
 | `lovable-visual-qa` | Opens the running app in headless Chromium: screenshots at 1366/1920/768 (light/dark), forms fit the laptop screen without scrolling, no horizontal overflow, console/HTTP errors, axe-core WCAG 2.2 AA; grades the screenshots. Report-only. |
+| `lovable-e2e-writer` | Playwright e2e tests: CRUD + relationships for every feature, a regression test (written first) for every bug fix; titles/steps are test cases in the UI language; sets up Playwright + CI once. Never runs against production. |
 
 Plus slash commands:
 
@@ -29,7 +30,7 @@ Plus slash commands:
 | `/lovable-lesson <feedback>` | Turn client/QA feedback into a durable rule (project instruction file + conventions) |
 | `/lovable-agents:<skill> <task>` | Do one task by a pattern skill's recipe (see *Pattern skills*) |
 
-And 8 **pattern skills** — recipes for data screens (lists, forms, documents with lines, bulk actions, filters, dashboards, tabbed cards, export/print), see below.
+And 10 **skills** — recipes for data screens (lists, forms, documents with lines, bulk actions, filters, dashboards, tabbed cards, export/print) plus e2e tests and the testers' PDF, see below.
 
 ## Quick guide
 
@@ -58,6 +59,8 @@ Reads `CLAUDE.md` / `AGENTS.md` and the code and writes only `.claude/lovable/po
 | make sure a client/QA remark never repeats | `/lovable-lesson QA: after saving, the form jumps back to the list; client wants to stay on the record` |
 | keep it to a single screen | add "only on this screen" |
 | build one thing by a known recipe | `/lovable-agents:document-lines purchase order form with lines` (see *Pattern skills*) |
+| fix a bug | describe it (or `/lovable-fix …`) — a `@regression` e2e test is written first, then the fix |
+| give QA the current test documentation | `/lovable-agents:test-docs` → PDF: what's new, relationship map, test cases with status, regressions, gaps |
 
 Commit `.claude/lovable/` together with the code changes it describes.
 
@@ -109,7 +112,8 @@ Every decision that differs between projects lives in one committed file in the 
   },
   "data": { "supabaseKeys": "env" },
   "seo": { "enabled": false },
-  "qa": { "enabled": true, "blocking": false }
+  "qa": { "enabled": true, "blocking": false },
+  "e2e": { "enabled": true, "required": false }
 }
 ```
 
@@ -125,6 +129,7 @@ Every decision that differs between projects lives in one committed file in the 
 | `data.supabaseKeys` | `env` / `inline` | Where the public Supabase URL/key come from |
 | `seo.enabled` | bool | Full SEO audit vs titles only |
 | `qa.enabled` / `qa.blocking` | bool | Run visual QA after UI changes / let its BLOCKERs stop the build (start advisory) |
+| `e2e.enabled` / `e2e.required` | bool | Write e2e tests for features / let the reviewer block a feature without tests (bug fixes always get a regression test) |
 
 ## Conventions & golden reference — `.claude/lovable/conventions.md`
 
@@ -168,6 +173,8 @@ Detailed rules for data-heavy screens live once, as skills in `plugins/lovable-a
 | `dashboard-charts` | server aggregates, KPI tiles, chart choice and tokens, report totals, invalidation |
 | `master-detail-tabs` | tabs that keep editor state, related records, append-only history |
 | `export-print` | typed Excel export, all-or-nothing import, print routes, sandboxed templates |
+| `e2e-crud` | Playwright setup (safe test env, auth, CI on the free plan), CRUD/relationship tests that read as test cases, regression tests for bug fixes |
+| `test-docs` | generates the testers' PDF from the e2e suite + DB schema + `e2e/relations.yaml` + git history |
 
 To change a data-screen rule, edit the skill — not the agents.
 
@@ -230,6 +237,13 @@ Commit it with the project — teammates get it too; call it as `/<name>` or let
 - Logged-in screens need test credentials: `export LOVABLE_QA_EMAIL=… LOVABLE_QA_PASSWORD=…` or `.claude/lovable/qa.local.json` (gitignored). Without them only public pages are checked.
 - It is read-only: opens pages and clicks the first table row to reach a detail screen. No submits, no data writes.
 - Findings are advisory until you set `"qa": { "blocking": true }`.
+
+## E2E tests & the testers' document
+
+- **Every feature** gets Playwright tests from `lovable-e2e-writer` (CRUD, relationships, `@smoke` for the core path); **every bug fix** gets a `@regression` test that reproduces the bug before the fix.
+- Test titles and `test.step`s are written as real test cases in the app's UI language (`<action>: <expected result>`), tagged by entity, annotated with relationships and bug tickets.
+- Tests run only against a test environment (separate test database / local stack); the config refuses forbidden (production) hosts. CI: smoke on every PR, full suite nightly — fits the GitHub free plan.
+- `/lovable-agents:test-docs` (or a CI step) turns the suite into a PDF for QA: what's new since the last tag, entity & relationship map (DB schema + `e2e/relations.yaml`), business flows, test cases by module with steps/expected/status, regression tests, and what isn't covered. Generated by `scripts/test-docs.mjs`, never hand-written.
 
 ## Hardening
 
@@ -388,10 +402,11 @@ lovable-agents/
 │   └── lovable-agents/
 │       ├── .claude-plugin/
 │       │   └── plugin.json             # plugin manifest (name: "lovable-agents")
-│       ├── agents/                     # the 8 lovable-* agents (.md)
+│       ├── agents/                     # the 9 lovable-* agents (.md)
 │       ├── skills/                     # pattern skills: <name>/SKILL.md
 │       ├── scripts/
-│       │   └── visual-qa.mjs           # Playwright + axe runner used by lovable-visual-qa
+│       │   ├── visual-qa.mjs           # Playwright + axe runner used by lovable-visual-qa
+│       │   └── test-docs.mjs           # e2e suite → testers' PDF generator (test-docs skill)
 │       └── commands/
 │           ├── lovable.md              # /lovable — build
 │           ├── lovable-adopt.md        # /lovable-adopt — connect an existing project

@@ -92,7 +92,7 @@ Grep for `variant="outline"` paired with `text-white` or hero-bg parents. shadcn
 
 ### 8. Data patterns (pattern skills)
 
-For each kind of screen in scope, `Read` the matching skill at `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` and run its **Audit** table (greps + severities): lists → `crud-list`; forms → `crud-form`; documents with lines → `document-lines`; bulk actions → `bulk-actions`; filters → `filters`; dashboards/reports/charts → `dashboard-charts`; tabbed cards/history → `master-detail-tabs`; export/import/print → `export-print`. A skill's BLOCKER is a BLOCKER here unless the project's instruction files or decision log say otherwise.
+For each kind of screen in scope, `Read` the matching skill at `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` and run its **Audit** table (greps + severities): lists → `crud-list`; forms → `crud-form`; documents with lines → `document-lines`; bulk actions → `bulk-actions`; filters → `filters`; dashboards/reports/charts → `dashboard-charts`; tabbed cards/history → `master-detail-tabs`; export/import/print → `export-print`; e2e tests (new features, bug fixes) → `e2e-crud`. A skill's BLOCKER is a BLOCKER here unless the project's instruction files or decision log say otherwise.
 
 Also, regardless of skills:
 - **Client-component correctness** (Next.js App Router): any file using hooks/handlers/browser APIs starts with `"use client"`. Flag `react-router-dom`, `BrowserRouter`, `index.html` or `src/main.tsx` — Vite artifacts that must not exist.

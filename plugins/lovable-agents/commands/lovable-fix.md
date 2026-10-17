@@ -11,7 +11,8 @@ Expected flow:
 1. Read `.claude/lovable/policy.json`, `.claude/lovable/conventions.md` (canon + `## Patterns`) and the project's CLAUDE.md / AGENTS.md if present.
 2. Classify: pattern-wide (default) or explicitly screen-specific.
 3. Inventory every occurrence of the same data shape / interaction (`file:line — current behaviour`) and show it in 3–10 lines; ask once only if it's very large or needs a product decision.
-4. `lovable-component-builder`: one shared primitive, migrate all occurrences, delete local variants.
-5. `lovable-design-reviewer`: section 13 must find zero stragglers; `tsc --noEmit` passes.
-6. Add/update the pattern's entry in `conventions.md` → `## Patterns` and a dated line in the Decision log.
-7. Summary: pattern, N sites unified, primitive path.
+4. `lovable-e2e-writer` (Mode B): a `@regression` Playwright test reproducing the problem — written first, it must fail now (re-run after step 5: it must pass).
+5. `lovable-component-builder`: one shared primitive, migrate all occurrences, delete local variants.
+6. `lovable-design-reviewer`: section 13 must find zero stragglers; `tsc --noEmit` passes.
+7. Add/update the pattern's entry in `conventions.md` → `## Patterns` and a dated line in the Decision log.
+8. Summary: pattern, N sites unified, primitive path, regression test name.
