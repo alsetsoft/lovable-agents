@@ -40,30 +40,13 @@ Orchestrator gives you: the user's request, the profile + `policy.json`, the des
 8. **Accessibility** (details in *Keyboard & accessibility* below). Icon-only buttons need `aria-label`. Images need `alt`. Use semantic elements, not `<div>` everywhere. Form labels are real `<label>`s bound to their control.
 9. **Toasts** for user feedback — import from `@/components/ui/sonner` or `@/hooks/use-toast` depending on what's installed. Errors: `toast.error(title, { description: error.message })`.
 10. **Supabase client** only from `@/integrations/supabase/client` — never construct one in a component, never read `process.env` in components.
-11. **Record lists = the shared data table.** No hand-rolled `<table>` per page. When `ui.mobileCards` is true, render the responsive pair: table inside `hidden md:block`, a stack of `Card`s inside `md:hidden` — same data.
-12. **Always render loading / empty / error states.** `Skeleton` rows while loading — never a blank flash. Empty state = short message (+ primary action in marketing / when the list is unfiltered). Error = a visible banner with the message.
-13. **Never paginate or filter the full dataset in the client.** Presentational components receive already-paged data + paging callbacks as props; the page/hook owns the Supabase `.range()` query.
-14. **Mark client components** (Next.js App Router): any component using hooks, event handlers, refs, or browser APIs must start with `"use client"`. Purely presentational, static components can stay server components.
-15. **Create/edit forms are full-screen components, never dialogs.** An entity's form (`<Entity>Form`) renders as a page body inside the shared form shell (back button + title + actions) that the `/<entity>/new` and `/<entity>/[id]` routes mount. One component handles both modes via an optional `id` (edit → fetch via TanStack Query, `Skeleton` while loading). After success, follow the policy:
-    - create → toast + `invalidateQueries`, then `forms.afterCreate`: `record` → `router.push("/<entity>/" + newId)` (insert with `.select("id").single()`), `list` → `router.push("/<entity>")`.
-    - save in edit mode → toast + `invalidateQueries`, then `forms.afterSave`: `stay` → **no navigation**, `list` → `router.push("/<entity>")`.
-    - delete / close → the list (or a validated `returnTo`).
-    Actions per `forms.actionsPlacement`: `header` → buttons in the form shell header (32px buttons; archive/delete ghost via `ConfirmDialog` · "create from this" actions · Close (outline) · Save/Create), submit sits outside `<form>` via `<form id={FORM_ID}>` + `<Button type="submit" form={FORM_ID}>`, no footer. `footer` → Cancel + Save footer. The **only** dialog allowed is a destructive-action confirmation.
-16. **Localize** every user-visible string, date, number and amount per `locale`/`timezone`/`currency` — use shared formatters, not ad-hoc `toLocaleString()` calls with different options in every file.
+11. **Data screens follow the pattern skills.** Before writing a list, form, document with lines, bulk action, filter, dashboard, tabbed card or export, `Read` the matching skill(s) at `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` (the orchestrator names them; index in the orchestrator's *Pattern skills*): `crud-list`, `crud-form`, `document-lines`, `bulk-actions`, `filters`, `dashboard-charts`, `master-detail-tabs`, `export-print`. They are the single source for layout, data fetching, navigation after save, and the CRUD hardening rules — follow them unless the project's canon, policy or instruction files say otherwise.
+13. **Mark client components** (Next.js App Router): any component using hooks, event handlers, refs, or browser APIs must start with `"use client"`. Purely presentational, static components can stay server components.
+12. **Localize** every user-visible string, date, number and amount per `locale`/`timezone`/`currency` — use shared formatters, not ad-hoc `toLocaleString()` calls with different options in every file.
 
-## Hardening Checklist (data screens — audited by the reviewer)
+## Hardening (data screens)
 
-Generic bugs QA keeps finding in CRUD apps. Implement all of them in every form/list you touch:
-
-1. **Submit lock.** `disabled={isSubmitting}` is not enough: clicks in the same tick slip through before re-render, and after a successful insert the button re-enables while `router.push` is still in flight — a second click creates a duplicate record. Use a ref-based lock (a small `useSubmitLock` hook if the project has none): `handleSubmit(lock.guard(onSubmit))`, button `disabled`/`aria-busy` = `isSubmitting || lock.locked`, and in the create branch call `lock.hold()` before `router.push`. Separate lock for "create document from this one" actions.
-2. **Radix `Select` + react-hook-form.** With async-loaded options Radix can fire a spurious `onValueChange("")` that silently wipes the value set by `reset()`. Always `onValueChange={(v) => v && field.onChange(v)}` and render the selected label as `SelectValue` children (`options.find(o => o.id === field.value)?.name`).
-3. **Non-negative numbers.** `<Input type="number" min={0}>` does not stop a pasted `-105`. Parse in `onChange` (clamp to ≥ 0, ignore NaN) and block `-`, `+`, `e` in `onKeyDown`. zod `.min(0)` on the schema.
-4. **Dates.** Native `<input type="date">` / `datetime-local` draws its calendar in the browser's language. When `locale` is not English, use a localized date/date-time picker component (week start, month names, typed input in the locale's format) that still emits `YYYY-MM-DD` / `YYYY-MM-DDTHH:mm`.
-5. **Archived references.** Selects for a new choice show only active records; if the current value is archived, keep it in the list (labelled as archived) so old records still open and save. Prefer a DB-generated `display_name` over appending "(archived)" in the UI (otherwise it appears twice).
-6. **Long static dictionaries** (60+ options) → a searchable select with keyboard highlight and scroll-to-selected; large server-side tables → an async combobox with server search. Plain `Select` only for short lists.
-7. **`returnTo`.** A card opened from inside another record returns there on Close/back: read `?from=`, accept only internal paths (starts with `/`, not `//`, no scheme), else fall back to the list.
-8. **Truncation.** Long text cells use `block max-w-* truncate`; the full value appears in a tooltip via one global mechanism (don't add `title` by hand if the project has one).
-9. **Phone / numeric identifiers** are validated and normalized on blur in one shared input component; codes/IDs that may have leading zeros stay strings.
+The CRUD hardening rules (submit lock, Radix Select wipe, non-negative numbers, localized dates, archived references, option lists, `returnTo`, truncation, identifiers, unsaved changes) are in the `crud-form` and `crud-list` skills — implement all of them in every form/list you touch.
 
 ## Pattern fixes (fix the pattern, not the instance)
 
@@ -189,18 +172,7 @@ A `Pricing` tier should have:
 
 ### `backoffice` (and any data screen)
 
-A record list (e.g. `ContactsView`, `OrdersView`) should have:
-- Root `flex flex-col gap-4`: page header with the total count + actions on the right ("+ New", 32px button), a toolbar row (debounced search `h-8`, filter selects `h-8`), an error banner, the shared data table, pagination.
-- Server-side sort (asc → desc → default), row click navigates to `/<entity>/[id]`.
-- Cell conventions: dates `whitespace-nowrap` + shared formatter; money right-aligned `tabular-nums` + money formatter; codes/numbers `tabular-nums`; long text truncated; empty value `—`; search matches highlighted when `highlightMatches`.
-- Pagination: page size selector from `lists.pageSizes`, page-number input (Enter/blur, clamped 1…N), first/last buttons.
-- When `ui.mobileCards`: a `RecordCard` stack inside `md:hidden`.
-
-A create/edit form (e.g. `ContactForm`, `OrderForm`) should have:
-- `"use client"`, an optional `id` prop, react-hook-form + zod, inline field errors, `Skeleton` grid while loading in edit mode.
-- Backoffice density: label-left rows, `h-8` controls sized to content (currency `w-28`, amount `w-40`, short select `w-64`, long `max-w-sm`), textarea `rows={2}`, a 2–3 column grid with a narrow "System info" column (created/updated/author) on wide screens. The whole card fits a laptop screen without scrolling.
-- Line-item tables (documents) are dense: header `h-8`, cells `py-1`, inputs `h-7`, totals and comment side by side.
-- Actions per `forms.actionsPlacement`; navigation after success per `forms.afterSave` / `forms.afterCreate`; the submit lock from the Hardening Checklist.
+Lists, forms, documents with lines, dashboards and cards: see the pattern skills (rule 11). Add one thoughtful *usability* detail per screen (keyboard submit, sticky header, sensible default sort, `—` for empty values).
 
 ## Reporting Back
 
