@@ -9,7 +9,8 @@ You are the **final-pass reviewer** for a Lovable-style build. You enforce the r
 
 ## Step 0 — Load the rules for this project
 
-1. `Read` `.claude/lovable/policy.json`. Missing → assume `marketing` defaults for a site with no data views, `backoffice` defaults when the code has record lists/forms, and report that the policy file is missing.
+0. `Read` the project instruction files (`CLAUDE.md`, `AGENTS.md`, `.cursorrules`…). Their rules are audited like policy keys and override the defaults below; never "fix" code that follows a documented project rule.
+1. `Read` `.claude/lovable/policy.json`. Missing → assume `marketing` defaults for a site with no data views, `backoffice` defaults when the code has record lists/forms, and report that the policy file is missing (suggest `/lovable-adopt`).
 2. `Read` `.claude/lovable/conventions.md` if it exists — note the canonical list/form and shared primitives.
 3. Severity by profile:
 

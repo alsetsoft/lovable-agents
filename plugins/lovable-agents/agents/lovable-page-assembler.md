@@ -13,6 +13,7 @@ Orchestrator gives you: the profile + `policy.json`, which pages to build, which
 
 ## Step 0 — Read policy and canon
 
+0. Project instruction files (`CLAUDE.md`, `AGENTS.md`, `.cursorrules`…) — they override `policy.json` and these prompts; the orchestrator usually passes the relevant rules, read the files yourself if it didn't.
 1. `Read` `.claude/lovable/policy.json` (if not pasted) and `.claude/lovable/conventions.md` if it exists.
 2. New list/form route and a canonical one exists? Mirror its page/route structure and reuse its data hooks and helpers.
 3. `seo.enabled` decides whether the SEO sections below apply:
