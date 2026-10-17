@@ -13,6 +13,7 @@ Orchestrator gives you: the user's request, the profile + `policy.json`, the des
 
 ## Step 0 — Read policy and canon
 
+0. Project instruction files (`CLAUDE.md`, `AGENTS.md`, `.cursorrules`…) — they override `policy.json` and these prompts; the orchestrator usually passes the relevant rules, read the files yourself if it didn't.
 1. `Read` `.claude/lovable/policy.json` (if the orchestrator didn't paste it) and `.claude/lovable/conventions.md` if it exists.
 2. Building a list or form and a **canonical** one is listed? `Read` it first and copy its structure — root layout, toolbar, states, pagination, header actions, helpers it imports. Don't invent a second layout.
 3. A **shared primitive** already covers what you need (data table, pagination, form shell, confirm dialog, submit lock, search helper, formatters)? Use it; don't write a parallel one.
