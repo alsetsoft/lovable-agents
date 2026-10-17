@@ -23,6 +23,10 @@ test -d src/app && ls src/app
 
 Skip any step whose artifact already exists. Don't re-scaffold over a real project. If you find a Vite project (`vite.config.ts`, `index.html`, `src/main.tsx`), do NOT silently convert it — report it and stop unless told to migrate.
 
+## Project policy
+
+The orchestrator passes the profile + `policy.json` content. If `.claude/lovable/policy.json` does not exist, write it exactly as given (plain JSON, 2-space indent). Never overwrite an existing policy — report differences instead. The policy changes two scaffold steps below: the Supabase key mode (step 14) and, for `backoffice`, route groups (step 15).
+
 ## Scaffold Steps (when starting from empty)
 
 `create-next-app` is interactive — too brittle for an agent. Instead, **write the files directly**. Here's the minimum viable set:
@@ -199,7 +203,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
 ### 9. `src/app/page.tsx`
 
-Minimal stub — `lovable-page-assembler` will rebuild this:
+Minimal stub — `lovable-page-assembler` will rebuild this (skip for `backoffice`: step 15 puts `/` inside the `(app)` group):
 
 ```tsx
 export default function Home() {
@@ -291,11 +295,13 @@ out
 next-env.d.ts
 ```
 
-### 14. Supabase client + TanStack Query (CRM/ERP)
+### 14. Supabase client + TanStack Query
 
-This project is a CRM/ERP — wire up the data layer so list/detail views can fetch client-side with loading states and Supabase-level pagination. `@supabase/supabase-js` and `@tanstack/react-query` are already in `package.json` (step 1), and `layout.tsx` wraps the app in `<Providers>` (step 7).
+Wire up the data layer (always for `backoffice`; for `marketing` only when the site has records) so list/detail views can fetch client-side with loading states and Supabase-level pagination. `@supabase/supabase-js` and `@tanstack/react-query` are already in `package.json` (step 1), and `layout.tsx` wraps the app in `<Providers>` (step 7).
 
-`src/integrations/supabase/client.ts` — URL + anon/publishable key inlined (the anon key is public, so this is NOT an env var; leave clearly-marked placeholders if the real values aren't known yet):
+`src/integrations/supabase/client.ts` — the only place the keys appear. Mode per `data.supabaseKeys`:
+
+`"inline"` — URL + anon/publishable key inlined (the publishable key is public; leave clearly-marked placeholders if the real values aren't known yet):
 
 ```ts
 import { createClient } from "@supabase/supabase-js";
@@ -305,6 +311,19 @@ const SUPABASE_PUBLISHABLE_KEY = "YOUR_PUBLISHABLE_KEY";
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 ```
+
+`"env"` (backoffice default — several environments, keys rotate) — read public env vars here and nowhere else, and write a committed `.env.example` with placeholders (`.env.local` stays gitignored):
+
+```ts
+import { createClient } from "@supabase/supabase-js";
+
+export const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+);
+```
+
+Under any mode a service-role key never goes into `src/`.
 
 Pre-create `src/components/ui/skeleton.tsx` so loading states have a primitive to use:
 
@@ -317,6 +336,18 @@ function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>)
 
 export { Skeleton };
 ```
+
+### 15. Route groups (backoffice only)
+
+For `profile: "backoffice"`, lay out auth-gated groups instead of a public landing page:
+
+```
+src/app/(auth)/login/page.tsx     → sign-in screen
+src/app/(app)/layout.tsx          → app shell (menu + auth check, redirects to /login when signed out)
+src/app/(app)/page.tsx            → first screen after login (dashboard or the first entity list)
+```
+
+Keep `src/app/page.tsx` out (the `(app)` group owns `/`). Add `.env.local` to `.gitignore` when `data.supabaseKeys` is `"env"`.
 
 ## Next.js rules the other agents rely on
 
