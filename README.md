@@ -111,6 +111,23 @@ Use `/lovable-fix <what's wrong>` or just describe the fix — the orchestrator 
 
 Existing projects are detected as `css-first` or `legacy-config` (Tailwind v4 + `@config` JS config + HSL vars) and keep their mode; migration is a separate, explicit task.
 
+## Pattern skills
+
+Detailed rules for data-heavy screens live once, as skills in `plugins/lovable-agents/skills/` — the agents load only the ones a task needs, and the reviewer runs each skill's *Audit* table:
+
+| Skill | For |
+|-------|-----|
+| `crud-list` | record lists: shared table, server pagination/sort/search, states, archived rows, cells |
+| `crud-form` | create/edit routes, navigation after save, header actions, compact layout, CRUD hardening |
+| `document-lines` | header + line items: one-transaction save, generated columns, line editor, totals, snapshots |
+| `bulk-actions` | selection vs "all matching the filter", server recount, set-based execution |
+| `filters` | period filter, reference filters with archived values, URL state, saved views |
+| `dashboard-charts` | server aggregates, KPI tiles, chart choice and tokens, report totals, invalidation |
+| `master-detail-tabs` | tabs that keep editor state, related records, append-only history |
+| `export-print` | typed Excel export, all-or-nothing import, print routes, sandboxed templates |
+
+They're also available to the main session as `lovable-agents:<skill>`. To change a data-screen rule, edit the skill — not the agents.
+
 ## Hardening
 
 The builder implements and the reviewer greps for generic CRUD bugs: double submit (ref-based submit lock held through navigation), Radix `Select` spurious `onValueChange("")` wiping form values, negative numbers via paste, native date inputs in non-English locales, archived records offered in new selections, user search text interpolated into PostgREST filters, open redirects via `?from=`, out-of-range pages (416), truncated text without tooltips.
@@ -258,7 +275,8 @@ lovable-agents/
 │   └── lovable-agents/
 │       ├── .claude-plugin/
 │       │   └── plugin.json             # plugin manifest (name: "lovable-agents")
-│       ├── agents/                     # the 7 lovable-* agents (.md)
+│       ├── agents/                     # the lovable-* agents (.md)
+│       ├── skills/                     # pattern skills: <name>/SKILL.md
 │       └── commands/
 │           ├── lovable.md              # the /lovable command
 │           └── lovable-fix.md          # the /lovable-fix command (app-wide fixes)

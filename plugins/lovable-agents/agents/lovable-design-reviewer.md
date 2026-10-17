@@ -88,39 +88,24 @@ Grep for `variant="outline"` paired with `text-white` or hero-bg parents. shadcn
 - Cards have a hover transition.
 - Page uses at least one gradient / one shadow utility from the design system.
 
-### 8. Data patterns (every view that lists records)
+### 8. Data patterns (pattern skills)
 
-- **Shared table.** Lists use the project's shared data-table component; a hand-rolled `<table>` in a page is a violation. When `ui.mobileCards` is true: the table lives inside `hidden md:block` with a `md:hidden` card fallback rendering the same data; a lone table relying on `overflow-x-auto` for mobile is a violation. When false, don't add cards.
-- **Loading / empty / error states.** Grep for `useQuery` / `supabase.from(` and confirm the consuming component handles `isLoading` (renders `Skeleton`), empty data, and `isError`. A list that renders only `data.map(...)` with no loading branch is a violation.
-- **Supabase-level pagination.** Flag client-side paging over a fetched array (`.slice(`, manual page math on a full dataset). Pagination must use `.range(` with `count` per `lists.count`. Fetchers sit outside components; the main list query has `placeholderData: (prev) => prev`.
-- **Client-component correctness** (Next App Router): any file using hooks/handlers/browser APIs starts with `"use client"`. Flag `react-router-dom`, `BrowserRouter`, `index.html`, or `src/main.tsx` — Vite artifacts that must not exist.
-- **Create/edit on routes, not modals.** Grep for `Dialog`/`Sheet`/`Drawer` imports/usages and inspect each: if it wraps a create/edit form (form fields, `useForm`, Save/Create handlers, multiple inputs) it is a **violation** — convert it to a `/<entity>/new` + `/<entity>/[id]` route pair rendered through the form shell, and make the list navigate instead of toggling open state. A `Dialog`/`AlertDialog` is **only** allowed for a destructive confirmation (short "Delete X?" with confirm/cancel and no form fields) or a side panel the policy/decision log explicitly allows (e.g. change history). For each list view, matching `new/page.tsx` and `[id]/page.tsx` routes must exist; a "+ New" button wired to `setOpen(true)` is a violation.
+For each kind of screen in scope, `Read` the matching skill at `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` and run its **Audit** table (greps + severities): lists → `crud-list`; forms → `crud-form`; documents with lines → `document-lines`; bulk actions → `bulk-actions`; filters → `filters`; dashboards/reports/charts → `dashboard-charts`; tabbed cards/history → `master-detail-tabs`; export/import/print → `export-print`. A skill's BLOCKER is a BLOCKER here unless the project's instruction files or decision log say otherwise.
+
+Also, regardless of skills:
+- **Client-component correctness** (Next.js App Router): any file using hooks/handlers/browser APIs starts with `"use client"`. Flag `react-router-dom`, `BrowserRouter`, `index.html` or `src/main.tsx` — Vite artifacts that must not exist.
 
 ### 9. Policy compliance
 
-Check the code against each `policy.json` key that has an observable footprint:
+Check the code against each `policy.json` key with an observable footprint. `forms.*` and `lists.*` keys are covered by the `crud-form` / `crud-list` Audit tables (section 8). Beyond those:
 
-- `forms.afterSave: "stay"` → in form submit handlers, the **edit** branch must not `router.push`/`router.replace` to the list. Grep forms for `router.push(` and read the surrounding branch. `"list"` → edit save navigates to the list.
-- `forms.afterCreate: "record"` → the create branch inserts with `.select("id").single()` and pushes to `/<entity>/<id>`; pushing to the list is a violation.
-- `forms.actionsPlacement: "header"` → no Save/Cancel footer at the bottom of form screens; submit lives in the form shell header with `form={FORM_ID}`. `"footer"` → the reverse.
-- `lists.pageSizes` with >1 value → no hard-coded `PAGE_SIZE` constant in lists; size comes from the shared page-size hook and is in the query key. `persistPageSize` → one shared hook, not per-page `useState(50)`.
-- `lists.searchDebounceMs` → grep for debounce literals (`useDebounce(…, 300)`, `setTimeout(…, 300)` in search inputs); must use the shared constant.
-- `lists.archivedAtEnd` → lists with a "show archived" toggle order by `archived` first.
-- `data.supabaseKeys: "env"` → keys only read from `process.env.NEXT_PUBLIC_*` in `src/integrations/supabase/client.ts`; `"inline"` → no `process.env` for them. Under **any** policy, grep `src/` for `service_role` / `SUPABASE_SERVICE` — a service key in client code is a BLOCKER.
+- `data.supabaseKeys: "env"` → keys only read from `process.env.NEXT_PUBLIC_*` in `src/integrations/supabase/`; `"inline"` → no `process.env` for them. Under **any** policy, grep `src/` for `service_role` / `SUPABASE_SERVICE` — a service key in client code is a BLOCKER.
 - `ui.darkModeToggle: false` → no theme toggle UI.
 - `locale` non-English → grep for hard-coded English UI strings in pages/components (`>Save<`, `"Loading..."`, `placeholder="Search"`) and for `toLocaleString()` / `toLocaleDateString()` without the project's locale.
 
 ### 10. Hardening (forms and lists)
 
-- **Double submit.** For each form that calls `.insert(` (or a create RPC): its submit goes through a ref-based lock (`useSubmitLock`/equivalent — `guard`, `locked`, `hold`), the button's `disabled` includes the lock, and the create branch holds the lock before `router.push`. `disabled={isSubmitting}` alone is a violation. Same for "create from this record" action buttons.
-- **Radix Select wipe.** Grep `onValueChange={field.onChange}` and `onValueChange={(v) => field.onChange(v)}` — must be guarded `v && field.onChange(v)`. Select triggers bound to async options should render the selected label explicitly.
-- **Negative numbers.** Grep `type="number"` in forms/line-item editors for price/qty/amount/sum fields: `onChange` must parse/clamp to ≥ 0 (not `Number(e.target.value)` straight into state) and `onKeyDown` blocks `-`/`e`. `min={0}` alone is a violation.
-- **Native date inputs.** When `locale` is not English, grep `type="date"` / `type="datetime-local"` — replace with the project's localized date picker.
-- **Unsafe search interpolation.** Grep for template literals inside `.or(` / `.ilike(` / `.filter(` (`` .or(`…${ `` / `` .ilike("…", `%${ ``) where the value comes from user input. Must go through the shared sanitizing search helper or an RPC. A single `%${q}%` phrase pattern also violates `searchMode: "words"`.
-- **Open redirect.** Grep for `searchParams.get("from")` / `returnTo` / `redirect` params used in `router.push`: must pass through a validator that accepts only internal paths (`/…`, not `//`, no scheme).
-- **Archived options.** Form selects populated from tables with an `archived` column must filter archived out for new choices while keeping the current value.
-- **Range errors.** List fetchers must tolerate HTTP 416 / `PGRST103` (page past the end) and the UI must clamp the page; an unconditional `if (error) throw error` after `.range(` is a WARN.
-- **Truncation.** `truncate` cells without a tooltip mechanism (global or local) — WARN; manual `title` on top of a global tooltip mechanism — WARN (double tooltip).
+The hardening greps live in the `crud-form` and `crud-list` Audit tables (double submit, Radix Select wipe, negative numbers, native date inputs, unsafe search interpolation, open redirect, archived options, range errors, truncation). Run them for every form/list in scope.
 
 ### 11. Canon conformance
 
