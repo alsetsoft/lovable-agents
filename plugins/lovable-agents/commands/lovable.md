@@ -12,7 +12,7 @@ Expected flow (the orchestrator will run this):
 2. Restate the goal in 1 sentence + the profile + a design direction.
 3. List v1 features (3–6 bullets).
 4. Pick palette / fonts (and, for marketing, gradients/animations).
-5. Dispatch in order: `lovable-project-init` → `lovable-design-system` → (`lovable-component-builder` ∥ `lovable-page-assembler`) → `lovable-db-snapshot` (only if the DB schema was touched) → `lovable-design-reviewer`.
+5. Dispatch in order: `lovable-project-init` → `lovable-design-system` → (`lovable-component-builder` ∥ `lovable-page-assembler`) → `lovable-db-snapshot` (only if the DB schema was touched) → `lovable-design-reviewer` → `lovable-visual-qa` (UI changes; report-only unless `qa.blocking`).
 6. After the first complete entity (list + form) passes review, record it as the canon in `.claude/lovable/conventions.md`.
 7. Close with a 1–2 line summary.
 

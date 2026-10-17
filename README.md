@@ -17,6 +17,7 @@ A single plugin, `lovable-agents`, bundling:
 | `lovable-page-assembler` | Assembles full pages, routes, client-side data fetching (pagination/sort/search) and, for marketing, SEO. |
 | `lovable-db-snapshot` | Keeps an in-repo snapshot of the DB schema (`snapshots/db/schema.sql` + `SCHEMA.md`) for Supabase-like providers; runs after any schema change. |
 | `lovable-design-reviewer` | Final pass: design tokens, policy compliance, CRUD hardening, canon conformance, DB snapshot, and (marketing) SEO. Fixes what it finds. |
+| `lovable-visual-qa` | Opens the running app in headless Chromium: screenshots at 1366/1920/768 (light/dark), forms fit the laptop screen without scrolling, no horizontal overflow, console/HTTP errors, axe-core WCAG 2.2 AA; grades the screenshots. Report-only. |
 
 Plus slash commands:
 
@@ -103,7 +104,8 @@ Every decision that differs between projects lives in one committed file in the 
     "searchDebounceMs": 500, "searchMode": "words", "highlightMatches": true, "archivedAtEnd": true
   },
   "data": { "supabaseKeys": "env" },
-  "seo": { "enabled": false }
+  "seo": { "enabled": false },
+  "qa": { "enabled": true, "blocking": false }
 }
 ```
 
@@ -118,6 +120,7 @@ Every decision that differs between projects lives in one committed file in the 
 | `ui.mobileCards` | bool | Table + card stack on mobile vs table only |
 | `data.supabaseKeys` | `env` / `inline` | Where the public Supabase URL/key come from |
 | `seo.enabled` | bool | Full SEO audit vs titles only |
+| `qa.enabled` / `qa.blocking` | bool | Run visual QA after UI changes / let its BLOCKERs stop the build (start advisory) |
 
 ## Conventions & golden reference — `.claude/lovable/conventions.md`
 
@@ -146,6 +149,14 @@ Use `/lovable-fix <what's wrong>` or just describe the fix — the orchestrator 
 | Data | Supabase (`@supabase/ssr`) + TanStack Query | browser + server clients, session refreshed in `proxy.ts` |
 
 Existing projects are detected as `css-first` or `legacy-config` (Tailwind v4 + `@config` JS config + HSL vars) and keep their mode; migration is a separate, explicit task.
+
+## Visual QA
+
+`lovable-visual-qa` runs after the reviewer on every UI change. It installs Playwright + axe once into `~/.cache/lovable-qa` (never into your project), uses your running dev server (or starts and stops one), and writes screenshots + `results.json` to `.claude/lovable/qa/<date>/` (gitignored).
+
+- Logged-in screens need test credentials: `export LOVABLE_QA_EMAIL=… LOVABLE_QA_PASSWORD=…` or `.claude/lovable/qa.local.json` (gitignored). Without them only public pages are checked.
+- It is read-only: opens pages and clicks the first table row to reach a detail screen. No submits, no data writes.
+- Findings are advisory until you set `"qa": { "blocking": true }`.
 
 ## Hardening
 
@@ -294,7 +305,9 @@ lovable-agents/
 │   └── lovable-agents/
 │       ├── .claude-plugin/
 │       │   └── plugin.json             # plugin manifest (name: "lovable-agents")
-│       ├── agents/                     # the 7 lovable-* agents (.md)
+│       ├── agents/                     # the 8 lovable-* agents (.md)
+│       ├── scripts/
+│       │   └── visual-qa.mjs           # Playwright + axe runner used by lovable-visual-qa
 │       └── commands/
 │           ├── lovable.md              # /lovable — build
 │           ├── lovable-adopt.md        # /lovable-adopt — connect an existing project
