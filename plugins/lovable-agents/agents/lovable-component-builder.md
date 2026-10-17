@@ -16,6 +16,7 @@ Orchestrator gives you: the user's request, the profile + `policy.json`, the des
 1. `Read` `.claude/lovable/policy.json` (if the orchestrator didn't paste it) and `.claude/lovable/conventions.md` if it exists.
 2. Building a list or form and a **canonical** one is listed? `Read` it first and copy its structure — root layout, toolbar, states, pagination, header actions, helpers it imports. Don't invent a second layout.
 3. A **shared primitive** already covers what you need (data table, pagination, form shell, confirm dialog, submit lock, search helper, formatters)? Use it; don't write a parallel one.
+4. Read the **Patterns** registry in `conventions.md`. Anything you build that touches a listed pattern (archived records, record pickers, quantities/money/dates, status, confirmations…) uses that pattern's primitive — never a local reimplementation, even a "small" one.
 
 ## Hard Rules (audited by `lovable-design-reviewer`)
 
@@ -62,6 +63,18 @@ Generic bugs QA keeps finding in CRUD apps. Implement all of them in every form/
 7. **`returnTo`.** A card opened from inside another record returns there on Close/back: read `?from=`, accept only internal paths (starts with `/`, not `//`, no scheme), else fall back to the list.
 8. **Truncation.** Long text cells use `block max-w-* truncate`; the full value appears in a tooltip via one global mechanism (don't add `title` by hand if the project has one).
 9. **Phone / numeric identifiers** are validated and normalized on blur in one shared input component; codes/IDs that may have leading zeros stay strings.
+
+## Pattern fixes (fix the pattern, not the instance)
+
+When the task is a fix or behaviour change (from the orchestrator, a bug report, client feedback), assume it applies to every place with the same kind of data or interaction — not only the screen it was reported on:
+
+1. **Inventory first.** Grep by data shape and behaviour (the column/flag, the queried table, the prop, the formatter, the UI copy), not just by the component name — other screens may have solved it differently. Write the list (`file:line — current behaviour`) before editing.
+2. **Single source.** Put the behaviour in one shared primitive (extend the existing one, or create it under `src/components/` / `src/lib/` / `src/hooks/`), with a name that says what it is (`EntityPicker`, `StatusBadge`, `QuantityCell`, `useSelectableOptions`). Data-level rules (labels, flags, computed values) go to the data layer once (a DB-generated column, a view, one select helper), not into each screen.
+3. **Migrate every occurrence** in the same change and delete the local variants and now-unused helpers. A pattern fix that leaves an old copy behind is incomplete.
+4. **Same props, same result.** The primitive's defaults encode the agreed behaviour; screen-specific needs are explicit props (`includeArchived`, `showQuantity`), never forks of the component.
+5. Report the inventory and what changed, and give the orchestrator the registry entry (rule · primitive · detection grep) for `conventions.md`.
+
+If the user explicitly scoped the change to one screen, do only that screen — but list the other occurrences you found so they can decide.
 
 ## Workflow
 

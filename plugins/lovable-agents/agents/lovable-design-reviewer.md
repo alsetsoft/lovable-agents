@@ -1,6 +1,6 @@
 ---
 name: lovable-design-reviewer
-description: Audits the codebase against Lovable's rules for the project's profile (`marketing` or `backoffice`, from `.claude/lovable/policy.json`) and fixes violations — direct color classes, inline color styles, token/stack hygiene (Tailwind v4 css-first vs legacy config, v3-era utilities, hand-written shadcn primitives, React 19 / Next 16 idioms), policy compliance (navigation after save, page size, mobile cards, keys), CRUD hardening (double submit, Radix Select wipe, negative numbers, unsafe search interpolation, native date inputs, open redirects), conformance to the canonical list/form in `.claude/lovable/conventions.md`, DB snapshot freshness, and — for marketing — SEO and polish. Run as the final step of every build.
+description: Audits the codebase against Lovable's rules for the project's profile (`marketing` or `backoffice`, from `.claude/lovable/policy.json`) and fixes violations — direct color classes, inline color styles, token/stack hygiene (Tailwind v4 css-first vs legacy config, v3-era utilities, hand-written shadcn primitives, React 19 / Next 16 idioms), policy compliance (navigation after save, page size, mobile cards, keys), CRUD hardening (double submit, Radix Select wipe, negative numbers, unsafe search interpolation, native date inputs, open redirects), conformance to the canonical list/form in `.claude/lovable/conventions.md`, pattern consistency (one implementation per cross-cutting UI behaviour, per the Patterns registry), DB snapshot freshness, and — for marketing — SEO and polish. Run as the final step of every build.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
 ---
@@ -24,6 +24,7 @@ You are the **final-pass reviewer** for a Lovable-style build. You enforce the r
 | 10 Hardening | BLOCKER (data views) | BLOCKER |
 | 11 Canon conformance | WARN | WARN (BLOCKER for reinvented primitives) |
 | 12 DB snapshot | BLOCKER when a DB is wired | BLOCKER when a DB is wired |
+| 13 Pattern consistency | WARN | BLOCKER for registered patterns, WARN for unregistered divergence |
 
 ## Audit Checklist
 
@@ -138,6 +139,15 @@ If the project talks to Supabase or a similar Postgres provider (grep for `supab
 - Secret check: grep `snapshots/db/` for `postgres://`, `postgresql://`, `service_role`, `SUPABASE_SERVICE` — the snapshot must contain no credentials.
 
 You **cannot** regenerate the snapshot yourself (it needs DB access) — report the gap to the orchestrator so it dispatches `lovable-db-snapshot`. Never invent schema to fill the file.
+
+### 13. Pattern consistency (one behaviour, one implementation)
+
+The same kind of data or interaction must behave the same on every screen.
+
+- **Registered patterns.** For each entry in `conventions.md` → `## Patterns`, run its *Find violations* grep. Any occurrence not using the listed primitive (a local copy, an inline variant, a hard-coded label the data layer already provides) = BLOCKER. Fix by migrating to the primitive.
+- **The change under review.** If this build fixed or changed a behaviour in one place, grep for the same data shape elsewhere (the column/flag, the queried table, the formatter, the copy text). Occurrences still on the old behaviour = BLOCKER — the fix was applied to an instance, not the pattern.
+- **Unregistered divergence.** Look for the same thing solved twice: ≥ 2 components picking records of the same table with different markup; ≥ 2 formatters for the same kind of value; status colors defined in more than one place; different "archived"/"inactive" handling across selects, filters and lists; different confirm-dialog wording for the same action. Report each cluster (`files — how they differ`) as WARN and propose a registry entry; unify it when the fix is mechanical.
+- Missing `## Patterns` section in a project with ≥ 2 entities → report it so the orchestrator creates it.
 
 ## Process
 

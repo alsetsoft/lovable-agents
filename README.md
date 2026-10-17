@@ -18,7 +18,7 @@ A single plugin, `lovable-agents`, bundling:
 | `lovable-db-snapshot` | Keeps an in-repo snapshot of the DB schema (`snapshots/db/schema.sql` + `SCHEMA.md`) for Supabase-like providers; runs after any schema change. |
 | `lovable-design-reviewer` | Final pass: design tokens, policy compliance, CRUD hardening, canon conformance, DB snapshot, and (marketing) SEO. Fixes what it finds. |
 
-Plus the `/lovable` slash command, which kicks off the orchestrator from a single prompt.
+Plus two slash commands: `/lovable` kicks off a build from a single prompt; `/lovable-fix` applies a UI fix or behaviour change app-wide (see *Consistency*).
 
 ## Install
 
@@ -86,6 +86,17 @@ Every decision that differs between projects lives in one committed file in the 
 ## Conventions & golden reference — `.claude/lovable/conventions.md`
 
 After the first complete entity (list + create/edit form) passes review, the orchestrator records it as the **canon**: the canonical list file, the canonical form file, shared primitives (data table, pagination, form shell, submit lock, search helper, formatters…) and a dated **decision log** of client requirements. Later lists/forms copy the canon instead of re-deriving layout from prose; the reviewer flags divergence and re-implemented primitives.
+
+## Consistency — fix the pattern, not the instance
+
+A fix noticed on one screen (archived records shown differently in a select, a filter and a list; a record picker that shows quantity on one form but not another) is applied to **every** place with the same kind of data or interaction, in the same change:
+
+1. inventory all occurrences by data shape and behaviour (not just by component name);
+2. one shared primitive (component / hook / helper / DB-generated field), every occurrence migrated, local variants deleted;
+3. the rule recorded in `conventions.md` → `## Patterns` (rule · primitive · detection grep · date);
+4. the reviewer (section 13) re-runs every registered pattern's grep and blocks stragglers, and flags unregistered divergence (the same thing solved twice).
+
+Use `/lovable-fix <what's wrong>` or just describe the fix — the orchestrator applies this rule by default; say "only on this screen" to keep a change local.
 
 ## Stack
 
@@ -249,6 +260,7 @@ lovable-agents/
 │       │   └── plugin.json             # plugin manifest (name: "lovable-agents")
 │       ├── agents/                     # the 7 lovable-* agents (.md)
 │       └── commands/
-│           └── lovable.md              # the /lovable command
+│           ├── lovable.md              # the /lovable command
+│           └── lovable-fix.md          # the /lovable-fix command (app-wide fixes)
 └── README.md
 ```

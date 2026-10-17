@@ -167,6 +167,7 @@ List and detail pages fetch **client-side** with TanStack Query against Supabase
 - **Data is client-side.** List/detail pages fetch via TanStack Query + Supabase with loading skeletons and `.range()` pagination — see *Data Fetching* above, inside `"use client"` components.
 - **Create/edit are dedicated routes, not modals.** Wire `/<entity>/new` and `/<entity>/[id]` pages; the list navigates to them. Navigation after save/create follows the policy. Popups are only for destructive confirmation.
 - **Mirror the canon** from `conventions.md` for every new list/form route.
+- **Patterns registry**: wiring a list/filter/form that touches a pattern in `conventions.md` → use that pattern's primitive (picker, archived filter, formatter…). A behaviour change you make in one route's data hook (e.g. how archived rows are filtered or ordered) is applied to every route with the same data shape in the same change.
 
 ## Process
 
