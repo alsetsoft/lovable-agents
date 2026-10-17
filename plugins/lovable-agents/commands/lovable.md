@@ -8,7 +8,7 @@ Invoke the `lovable-orchestrator` agent with the user's request below. Pass the 
 User request: $ARGUMENTS
 
 Expected flow (the orchestrator will run this):
-1. Profile & policy: read `.claude/lovable/policy.json` + `.claude/lovable/conventions.md` if present; otherwise pick the profile (`marketing` / `backoffice`) and write the policy with its defaults plus the user's stated requirements.
+1. Profile & policy: read the project instruction files (CLAUDE.md/AGENTS.md…), `.claude/lovable/policy.json` + `.claude/lovable/conventions.md` if present; an existing app without a policy → Adopt mode first (as `/lovable-adopt`); only an empty project picks the profile (`marketing` / `backoffice`) and write the policy with its defaults plus the user's stated requirements.
 2. Restate the goal in 1 sentence + the profile + a design direction.
 3. List v1 features (3–6 bullets).
 4. Pick palette / fonts (and, for marketing, gradients/animations).
