@@ -1,6 +1,6 @@
 # lovable-agents
 
-Shared [Claude Code](https://docs.claude.com/en/docs/claude-code) agents for building **Lovable-style** Next.js (App Router) + TypeScript + Tailwind + shadcn/ui apps.
+Shared [Claude Code](https://docs.claude.com/en/docs/claude-code) agents for building **Lovable-style** Next.js (App Router) + TypeScript + Tailwind + shadcn/ui apps — marketing sites and CRM/ERP back-offices.
 
 This repo is a **Claude Code plugin marketplace**. Install it once in any project (or globally) and every project gets the same agents. Edit an agent here, push, and all projects pull the update — no more copy-pasting between repos.
 
@@ -14,9 +14,9 @@ A single plugin, `lovable-agents`, bundling:
 | `lovable-project-init` | Scaffolds a fresh Next.js + TS + Tailwind + shadcn project (idempotent). |
 | `lovable-design-system` | Authors the design system: `globals.css` tokens + `tailwind.config.ts`. |
 | `lovable-component-builder` | Builds individual React + TS components from the design system. |
-| `lovable-page-assembler` | Assembles full pages, SEO metadata, semantic landmarks, routes. |
+| `lovable-page-assembler` | Assembles full pages, routes, client-side data fetching (pagination/sort/search) and, for marketing, SEO. |
 | `lovable-db-snapshot` | Keeps an in-repo snapshot of the DB schema (`snapshots/db/schema.sql` + `SCHEMA.md`) for Supabase-like providers; runs after any schema change. |
-| `lovable-design-reviewer` | Audits and fixes design-system / SEO violations as the final step. |
+| `lovable-design-reviewer` | Final pass: design tokens, policy compliance, CRUD hardening, canon conformance, DB snapshot, and (marketing) SEO. Fixes what it finds. |
 
 Plus the `/lovable` slash command, which kicks off the orchestrator from a single prompt.
 
@@ -33,9 +33,63 @@ That's it. Start a build with:
 
 ```text
 /lovable landing page for an AI note-taking app
+/lovable backoffice CRM for a furniture store: clients, orders, payments
 ```
 
 Or just ask Claude to "build / create / design" an app — the orchestrator triggers automatically.
+
+## Profiles
+
+The orchestrator picks a **profile** first (or takes it from the first word of `/lovable`):
+
+| | `marketing` | `backoffice` |
+|---|---|---|
+| For | landing pages, sites, promo/product pages | CRM, ERP, admin panels, internal tools |
+| Look | gradients, motion, generous spacing | dense: `h-8` controls, restrained palette, no entrance animations |
+| SEO | full (Metadata API, OG, canonical, JSON-LD) — reviewer BLOCKER | titles only, auth-gated `(app)` / `(auth)` route groups |
+| Lists | table + mobile cards, 20 per page | shared data table, selectable 50/100/200, persisted |
+| After "Save" | back to the list | stay on the record; create → the new record |
+
+## Project policy — `.claude/lovable/policy.json`
+
+Every decision that differs between projects lives in one committed file in the **target project**, not in these prompts. The orchestrator writes it on cold start (profile defaults + whatever the user/client asked for); every agent reads it first; the reviewer enforces it. Edit it by hand any time — agents never silently overwrite it.
+
+```json
+{
+  "profile": "backoffice",
+  "locale": "en-US",
+  "timezone": "UTC",
+  "currency": "USD",
+  "ui": { "density": "compact", "mobileCards": false, "motion": "minimal", "darkModeToggle": false },
+  "forms": { "afterSave": "stay", "afterCreate": "record", "actionsPlacement": "header", "submitLock": true },
+  "lists": {
+    "pageSizes": [50, 100, 200], "persistPageSize": true, "count": "exact",
+    "searchDebounceMs": 500, "searchMode": "words", "highlightMatches": true, "archivedAtEnd": true
+  },
+  "data": { "supabaseKeys": "env" },
+  "seo": { "enabled": false }
+}
+```
+
+| Key | Values | Effect |
+|-----|--------|--------|
+| `forms.afterSave` | `stay` / `list` | Where "Save" in edit mode lands |
+| `forms.afterCreate` | `record` / `list` | Where a successful create lands |
+| `forms.actionsPlacement` | `header` / `footer` | Form buttons in the shell header or a bottom footer |
+| `lists.pageSizes` | number[] | One value = fixed; several = user-selectable |
+| `lists.count` | `exact` / `estimated` | Supabase `count` mode for list totals |
+| `lists.searchMode` | `words` / `phrase` | `words`: every word must match some field, any order |
+| `ui.mobileCards` | bool | Table + card stack on mobile vs table only |
+| `data.supabaseKeys` | `env` / `inline` | Where the public Supabase URL/key come from |
+| `seo.enabled` | bool | Full SEO audit vs titles only |
+
+## Conventions & golden reference — `.claude/lovable/conventions.md`
+
+After the first complete entity (list + create/edit form) passes review, the orchestrator records it as the **canon**: the canonical list file, the canonical form file, shared primitives (data table, pagination, form shell, submit lock, search helper, formatters…) and a dated **decision log** of client requirements. Later lists/forms copy the canon instead of re-deriving layout from prose; the reviewer flags divergence and re-implemented primitives.
+
+## Hardening
+
+The builder implements and the reviewer greps for generic CRUD bugs: double submit (ref-based submit lock held through navigation), Radix `Select` spurious `onValueChange("")` wiping form values, negative numbers via paste, native date inputs in non-English locales, archived records offered in new selections, user search text interpolated into PostgREST filters, open redirects via `?from=`, out-of-range pages (416), truncated text without tooltips.
 
 ## Auto-install for a project (team-wide)
 
@@ -180,7 +234,7 @@ lovable-agents/
 │   └── lovable-agents/
 │       ├── .claude-plugin/
 │       │   └── plugin.json             # plugin manifest (name: "lovable-agents")
-│       ├── agents/                     # the 6 lovable-* agents (.md)
+│       ├── agents/                     # the 7 lovable-* agents (.md)
 │       └── commands/
 │           └── lovable.md              # the /lovable command
 └── README.md

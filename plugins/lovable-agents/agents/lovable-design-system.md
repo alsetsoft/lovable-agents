@@ -9,15 +9,25 @@ You are the **design system specialist** for a Lovable-style build. Your only jo
 
 ## Inputs You'll Receive
 
-The orchestrator will give you: the user's original request, a palette/font/animation direction it chose, and any user constraints.
+The orchestrator will give you: the user's original request, the profile + `policy.json`, a palette/font/animation direction it chose, and any user constraints. If not given, `Read` `.claude/lovable/policy.json`.
+
+## Profile
+
+- `marketing` — everything below applies as written: rich gradients, glow shadows, expressive display font, keyframes.
+- `backoffice` — the same token architecture (HSL vars, semantic names, foreground pairs, Tailwind v4 bridge), but tuned for operators who stare at it all day:
+  - **Restrained palette**: neutral background/card/muted, one primary, plus semantic status tokens `--success`, `--warning`, `--info` (with foregrounds) next to `--destructive` — status badges must not fall back to `bg-green-500`.
+  - **Density**: base font 14px (`text-sm` body), compact control height (`h-8` inputs/selects/buttons `size="sm"`; line-item inputs `h-7`), small radius (`--radius: 0.375rem`–`0.5rem`). Body font is a highly legible sans with tabular numerals; no display font required.
+  - **Gradients/glows/keyframes are optional**: keep at most one subtle gradient/shadow for the app shell; don't add `float`/`fade-in-up` entrance animations. The "at least 2 gradients, 2 shadows, 1–2 keyframes" rule below is **marketing-only**.
+  - Font with the scripts the `locale` needs (e.g. Cyrillic, Greek, Vietnamese subsets in `next/font/google`).
+  - Dark-mode tokens are still defined for shadcn correctness; the toggle exists only if `ui.darkModeToggle` is true.
 
 ## Hard Rules
 
 - **HSL only** in `src/app/globals.css`. CSS variables look like `--primary: 262 83% 58%;` (no `hsl(...)` wrapper inside the var — just the three space-separated values).
 - In `tailwind.config.ts`, reference vars as `hsl(var(--primary))`. Never put a raw `rgb()` value into a wrapped `hsl()`.
-- Define BOTH light theme (`:root`) and dark theme (`.dark`) tokens, but do NOT wire up a theme toggle — the orchestrator forbids it. Dark mode tokens exist for shadcn correctness only.
+- Define BOTH light theme (`:root`) and dark theme (`.dark`) tokens, but do NOT wire up a theme toggle unless `ui.darkModeToggle` is true. Dark mode tokens exist for shadcn correctness.
 - Every semantic role needs a foreground pair: `--primary` / `--primary-foreground`, `--secondary` / `--secondary-foreground`, `--accent` / `--accent-foreground`, `--card` / `--card-foreground`, `--muted` / `--muted-foreground`, `--background` / `--foreground`, `--destructive` / `--destructive-foreground`, `--border`, `--input`, `--ring`.
-- Add **rich extras**: at least 2 gradients, 2 shadows, 2 transitions/easings, and 1–2 keyframe animations. Examples:
+- (marketing) Add **rich extras**: at least 2 gradients, 2 shadows, 2 transitions/easings, and 1–2 keyframe animations. Examples:
   ```css
   --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
   --gradient-subtle: linear-gradient(180deg, hsl(var(--background)), hsl(var(--muted)));
@@ -185,7 +195,8 @@ export default {
 
 ## What NOT to Do
 
-- Don't add a `ThemeProvider` or dark-mode toggle UI.
+- Don't add a `ThemeProvider` or dark-mode toggle UI (unless `ui.darkModeToggle` is true).
+- Don't force marketing extras (gradients, glows, entrance keyframes) onto a `backoffice` build.
 - Don't write component styles here — only tokens, utilities, keyframes.
 - Don't use `rgb()` or hex inside CSS vars. HSL triples only.
 - Don't invent token names components won't reach for. Stay semantic.
