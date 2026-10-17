@@ -40,7 +40,7 @@ And 10 **skills** — recipes for data screens (lists, forms, documents with lin
 /lovable backoffice CRM for a furniture store: clients, orders, payments
 ```
 
-The orchestrator scaffolds the app, writes `.claude/lovable/policy.json`, builds the first entity end-to-end and records it as the canon in `conventions.md`. Later entities copy it.
+The orchestrator scaffolds the app, writes `.lovable/policy.json`, builds the first entity end-to-end and records it as the canon in `conventions.md`. Later entities copy it.
 
 **Existing project** (once per repo)
 
@@ -48,7 +48,7 @@ The orchestrator scaffolds the app, writes `.claude/lovable/policy.json`, builds
 /lovable-adopt
 ```
 
-Reads `CLAUDE.md` / `AGENTS.md` and the code and writes only `.claude/lovable/policy.json` + `conventions.md`: inferred settings with evidence, the canonical list/form, shared primitives, the patterns registry, divergent clusters and the decision log. Check the "assumed" values it reports, then commit both files so the whole team's agents follow the same rules. Instruction files always win over the policy and the agents' defaults.
+Reads `CLAUDE.md` / `AGENTS.md` and the code and writes only `.lovable/policy.json` + `conventions.md`: inferred settings with evidence, the canonical list/form, shared primitives, the patterns registry, divergent clusters and the decision log. Check the "assumed" values it reports, then commit both files so the whole team's agents follow the same rules. Instruction files always win over the policy and the agents' defaults.
 
 **Day to day**
 
@@ -62,7 +62,7 @@ Reads `CLAUDE.md` / `AGENTS.md` and the code and writes only `.claude/lovable/po
 | fix a bug | describe it (or `/lovable-fix …`) — a `@regression` e2e test is written first, then the fix |
 | give QA the current test documentation | `/lovable-agents:test-docs` → PDF: what's new, relationship map, test cases with status, regressions, gaps |
 
-Commit `.claude/lovable/` together with the code changes it describes.
+Commit `.lovable/` together with the code changes it describes.
 
 ## Install
 
@@ -94,7 +94,9 @@ The orchestrator picks a **profile** first (or takes it from the first word of `
 | Lists | table + mobile cards, 20 per page | shared data table, selectable 50/100/200, persisted |
 | After "Save" | back to the list | stay on the record; create → the new record |
 
-## Project policy — `.claude/lovable/policy.json`
+## Project policy — `.lovable/policy.json`
+
+Project files live in `.lovable/` at the project root (not `.claude/`, which Claude Code treats as sensitive — every write there needs a permission prompt and fails in headless/CI runs; older `.claude/lovable/` folders are read and moved automatically).
 
 Every decision that differs between projects lives in one committed file in the **target project**, not in these prompts. The orchestrator writes it on cold start (profile defaults + whatever the user/client asked for); every agent reads it first; the reviewer enforces it. Edit it by hand any time — agents never silently overwrite it.
 
@@ -131,7 +133,7 @@ Every decision that differs between projects lives in one committed file in the 
 | `qa.enabled` / `qa.blocking` | bool | Run visual QA after UI changes / let its BLOCKERs stop the build (start advisory) |
 | `e2e.enabled` / `e2e.required` | bool | Write e2e tests for features / let the reviewer block a feature without tests (bug fixes always get a regression test) |
 
-## Conventions & golden reference — `.claude/lovable/conventions.md`
+## Conventions & golden reference — `.lovable/conventions.md`
 
 After the first complete entity (list + create/edit form) passes review, the orchestrator records it as the **canon**: the canonical list file, the canonical form file, shared primitives (data table, pagination, form shell, submit lock, search helper, formatters…) and a dated **decision log** of client requirements. Later lists/forms copy the canon instead of re-deriving layout from prose; the reviewer flags divergence and re-implemented primitives.
 
@@ -232,9 +234,9 @@ Commit it with the project — teammates get it too; call it as `/<name>` or let
 
 ## Visual QA
 
-`lovable-visual-qa` runs after the reviewer on every UI change. It installs Playwright + axe once into `~/.cache/lovable-qa` (never into your project), uses your running dev server (or starts and stops one), and writes screenshots + `results.json` to `.claude/lovable/qa/<date>/` (gitignored).
+`lovable-visual-qa` runs after the reviewer on every UI change. It installs Playwright + axe once into `~/.cache/lovable-qa` (never into your project), uses your running dev server (or starts and stops one), and writes screenshots + `results.json` to `.lovable/qa/<date>/` (gitignored).
 
-- Logged-in screens need test credentials: `export LOVABLE_QA_EMAIL=… LOVABLE_QA_PASSWORD=…` or `.claude/lovable/qa.local.json` (gitignored). Without them only public pages are checked.
+- Logged-in screens need test credentials: `export LOVABLE_QA_EMAIL=… LOVABLE_QA_PASSWORD=…` or `.lovable/qa.local.json` (gitignored). Without them only public pages are checked.
 - It is read-only: opens pages and clicks the first table row to reach a detail screen. No submits, no data writes.
 - Findings are advisory until you set `"qa": { "blocking": true }`.
 

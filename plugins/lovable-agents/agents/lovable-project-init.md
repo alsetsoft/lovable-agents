@@ -35,7 +35,7 @@ Report the mode to the orchestrator; the other agents follow it. Migrating `lega
 
 ## Project policy
 
-The orchestrator passes the profile + `policy.json` content. If `.claude/lovable/policy.json` does not exist, write it exactly as given (plain JSON, 2-space indent). Never overwrite an existing policy — report differences instead. The policy changes three scaffold steps below: `<html lang>` (step 5), the Supabase key mode (step 9) and, for `backoffice`, route groups + `proxy.ts` (step 10).
+The orchestrator passes the profile + `policy.json` content. If `.lovable/policy.json` does not exist, write it exactly as given (plain JSON, 2-space indent). Never overwrite an existing policy — report differences instead. The policy changes three scaffold steps below: `<html lang>` (step 5), the Supabase key mode (step 9) and, for `backoffice`, route groups + `proxy.ts` (step 10).
 
 ## Scaffold Steps (when starting from empty)
 

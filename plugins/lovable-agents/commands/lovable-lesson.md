@@ -1,9 +1,9 @@
 ---
-description: Turn client/QA feedback or a bug into a durable rule — recorded in the project's instruction file and `.claude/lovable/conventions.md` (decision log / patterns registry), with existing violations listed and, for domain-agnostic bugs, a proposal for the lovable-agents plugin. Dispatches the lovable-orchestrator agent.
+description: Turn client/QA feedback or a bug into a durable rule — recorded in the project's instruction file and `.lovable/conventions.md` (decision log / patterns registry), with existing violations listed and, for domain-agnostic bugs, a proposal for the lovable-agents plugin. Dispatches the lovable-orchestrator agent.
 argument-hint: <what happened + the client's/QA's words, e.g. "QA: archived customers still offered in the order form; client wants them hidden everywhere">
 ---
 
-Invoke the `lovable-orchestrator` agent and follow its *Lessons* section. Reply in the user's language.
+Invoke the `lovable-orchestrator` agent and follow its *Lessons* section. Reply in the user's language. Dispatch it in the **foreground** (`run_in_background: false`) and don't reply until it returns its final report; if it ever hands back an interim "still running" message, resume it (SendMessage) until the pipeline is done.
 
 Lesson: $ARGUMENTS
 

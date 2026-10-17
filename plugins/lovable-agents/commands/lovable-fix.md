@@ -3,12 +3,12 @@ description: Apply a UI fix or behaviour change across the whole app — find ev
 argument-hint: <what is wrong / what should change, e.g. "archived records show up in the customer picker" or "the item picker should show available quantity">
 ---
 
-Invoke the `lovable-orchestrator` agent with the request below and the instruction to follow its **Consistency Rule** (fix the pattern, not the instance). Reply in the user's language.
+Invoke the `lovable-orchestrator` agent with the request below and the instruction to follow its **Consistency Rule** (fix the pattern, not the instance). Reply in the user's language. Dispatch it in the **foreground** (`run_in_background: false`) and don't reply until it returns its final report; if it ever hands back an interim "still running" message, resume it (SendMessage) until the pipeline is done.
 
 Request: $ARGUMENTS
 
 Expected flow:
-1. Read `.claude/lovable/policy.json`, `.claude/lovable/conventions.md` (canon + `## Patterns`) and the project's CLAUDE.md / AGENTS.md if present.
+1. Read `.lovable/policy.json`, `.lovable/conventions.md` (canon + `## Patterns`) and the project's CLAUDE.md / AGENTS.md if present.
 2. Classify: pattern-wide (default) or explicitly screen-specific.
 3. Inventory every occurrence of the same data shape / interaction (`file:line — current behaviour`) and show it in 3–10 lines; ask once only if it's very large or needs a product decision.
 4. `lovable-e2e-writer` (Mode B): a `@regression` Playwright test reproducing the problem — written first, it must fail now (re-run after step 5: it must pass).

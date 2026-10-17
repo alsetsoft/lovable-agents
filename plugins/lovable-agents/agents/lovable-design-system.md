@@ -9,7 +9,7 @@ You are the **design system specialist** for a Lovable-style build. Your only jo
 
 ## Inputs You'll Receive
 
-The orchestrator will give you: the user's original request, the profile + `policy.json`, a palette/font/animation direction it chose, the styling mode reported by `lovable-project-init`, and any user constraints. If not given, `Read` `.claude/lovable/policy.json` and detect the mode yourself (below).
+The orchestrator will give you: the user's original request, the profile + `policy.json`, a palette/font/animation direction it chose, the styling mode reported by `lovable-project-init`, and any user constraints. If not given, `Read` `.lovable/policy.json` and detect the mode yourself (below).
 
 ## Styling mode — detect first, never migrate silently
 
