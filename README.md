@@ -1,6 +1,6 @@
 # lovable-agents
 
-Shared [Claude Code](https://docs.claude.com/en/docs/claude-code) agents for building **Lovable-style** Next.js (App Router) + TypeScript + Tailwind + shadcn/ui apps — marketing sites and CRM/ERP back-offices.
+Shared [Claude Code](https://docs.claude.com/en/docs/claude-code) agents for building **Lovable-style** Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + shadcn/ui apps — marketing sites and CRM/ERP back-offices.
 
 This repo is a **Claude Code plugin marketplace**. Install it once in any project (or globally) and every project gets the same agents. Edit an agent here, push, and all projects pull the update — no more copy-pasting between repos.
 
@@ -11,8 +11,8 @@ A single plugin, `lovable-agents`, bundling:
 | Agent | Role |
 |-------|------|
 | `lovable-orchestrator` | Owns the full build workflow; delegates to the agents below. |
-| `lovable-project-init` | Scaffolds a fresh Next.js + TS + Tailwind + shadcn project (idempotent). |
-| `lovable-design-system` | Authors the design system: `globals.css` tokens + `tailwind.config.ts`. |
+| `lovable-project-init` | Scaffolds a fresh Next.js 16 + React 19 + Tailwind v4 project; shadcn primitives via the shadcn CLI; Supabase via `@supabase/ssr` + `proxy.ts` auth gate (idempotent, never migrates an existing project). |
+| `lovable-design-system` | Authors the design tokens in `globals.css` (CSS-first: OKLCH vars + `@theme inline`; legacy `tailwind.config.ts` projects keep their mode). |
 | `lovable-component-builder` | Builds individual React + TS components from the design system. |
 | `lovable-page-assembler` | Assembles full pages, routes, client-side data fetching (pagination/sort/search) and, for marketing, SEO. |
 | `lovable-db-snapshot` | Keeps an in-repo snapshot of the DB schema (`snapshots/db/schema.sql` + `SCHEMA.md`) for Supabase-like providers; runs after any schema change. |
@@ -86,6 +86,19 @@ Every decision that differs between projects lives in one committed file in the 
 ## Conventions & golden reference — `.claude/lovable/conventions.md`
 
 After the first complete entity (list + create/edit form) passes review, the orchestrator records it as the **canon**: the canonical list file, the canonical form file, shared primitives (data table, pagination, form shell, submit lock, search helper, formatters…) and a dated **decision log** of client requirements. Later lists/forms copy the canon instead of re-deriving layout from prose; the reviewer flags divergence and re-implemented primitives.
+
+## Stack
+
+| Layer | Choice | Notes |
+|-------|--------|-------|
+| Framework | Next.js 16 App Router | `proxy.ts` (not `middleware.ts`), async `params`/`searchParams`/`cookies()`, no `next lint` — `tsc --noEmit` |
+| UI runtime | React 19 | `ref` as a prop, no `forwardRef` in new code |
+| Styling | Tailwind CSS v4, CSS-first | tokens = OKLCH vars + `@theme inline` in `globals.css`; no new `tailwind.config.ts` |
+| Primitives | shadcn/ui via CLI (`radix` base, `nova` preset) | `npx shadcn@latest add <name> -y` — never hand-written; compact `h-8` default controls |
+| Forms | react-hook-form + zod + @hookform/resolvers | majors pinned together in the scaffold |
+| Data | Supabase (`@supabase/ssr`) + TanStack Query | browser + server clients, session refreshed in `proxy.ts` |
+
+Existing projects are detected as `css-first` or `legacy-config` (Tailwind v4 + `@config` JS config + HSL vars) and keep their mode; migration is a separate, explicit task.
 
 ## Hardening
 

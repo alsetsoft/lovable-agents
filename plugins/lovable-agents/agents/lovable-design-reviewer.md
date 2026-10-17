@@ -1,6 +1,6 @@
 ---
 name: lovable-design-reviewer
-description: Audits the codebase against Lovable's rules for the project's profile (`marketing` or `backoffice`, from `.claude/lovable/policy.json`) and fixes violations — direct color classes, inline color styles, raw RGB in CSS vars, policy compliance (navigation after save, page size, mobile cards, keys), CRUD hardening (double submit, Radix Select wipe, negative numbers, unsafe search interpolation, native date inputs, open redirects), conformance to the canonical list/form in `.claude/lovable/conventions.md`, DB snapshot freshness, and — for marketing — SEO and polish. Run as the final step of every build.
+description: Audits the codebase against Lovable's rules for the project's profile (`marketing` or `backoffice`, from `.claude/lovable/policy.json`) and fixes violations — direct color classes, inline color styles, token/stack hygiene (Tailwind v4 css-first vs legacy config, v3-era utilities, hand-written shadcn primitives, React 19 / Next 16 idioms), policy compliance (navigation after save, page size, mobile cards, keys), CRUD hardening (double submit, Radix Select wipe, negative numbers, unsafe search interpolation, native date inputs, open redirects), conformance to the canonical list/form in `.claude/lovable/conventions.md`, DB snapshot freshness, and — for marketing — SEO and polish. Run as the final step of every build.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
 ---
@@ -15,7 +15,7 @@ You are the **final-pass reviewer** for a Lovable-style build. You enforce the r
 
 | Section | marketing | backoffice |
 |---------|-----------|------------|
-| 1–4 Colors / tokens / Tailwind v4 / outline buttons | BLOCKER | BLOCKER |
+| 1–4 Colors / tokens & stack / outline buttons | BLOCKER | BLOCKER |
 | 5 SEO | BLOCKER | only "title per route + one `<main>`" (NIT) |
 | 6 Component hygiene | WARN | WARN |
 | 7 Animations & polish | NIT | skip |
@@ -45,13 +45,19 @@ Grep `src/` for these patterns. If they appear in component/page code (not in `s
 
 Grep for `style={{` near `color:`, `background:`, `border:`, `fill:`, `stroke:`. Replace with classes / tokens. Exception: colors that are **data** (e.g. a status color stored in the DB rendered as a dot) may be inline.
 
-### 3. Raw colors in CSS vars
+### 3. Tokens & stack (Tailwind v4 / shadcn / React 19 / Next 16)
 
-Grep `src/app/globals.css` for `rgb(`, `rgba(`, `#[0-9a-fA-F]{3,8}` inside CSS variable definitions. CSS vars must be HSL triples like `262 83% 58%`.
+First detect the styling mode (same table as `lovable-design-system`): `css-first` (`@theme inline` in `globals.css`, `components.json` → `"tailwind": { "config": "" }`) or `legacy-config` (`@config "…tailwind.config.ts"`, HSL-triple vars). Judge the project by **its** mode — don't flag a legacy project for not being css-first.
 
-Also flag **legacy Tailwind v3 syntax** in `src/app/globals.css` (this stack is Tailwind v4): the directives `@tailwind base;` / `@tailwind components;` / `@tailwind utilities;` must be replaced by a single `@import "tailwindcss";` (plus `@import "tw-animate-css";` and `@config "../../tailwind.config.ts";`). Likewise flag a `require(` in `tailwind.config.ts` (the project is ESM — animations come from the `tw-animate-css` import, so `plugins: []`) and `darkMode: ["class"]` (v4 wants the string `darkMode: "class"`).
-
-v3-era arbitrary CSS-variable syntax in shadcn primitives: `max-h-[--var]`, `origin-[--var]`, `w-[--var]` silently do nothing in v4 (long `Select` lists overflow the screen). Must be `max-h-(--var)` / `origin-(--var)`; the `[var(--x)]` form is fine.
+- **Raw colors in token definitions.** Grep `src/app/globals.css` for `rgb(`, `rgba(`, `#[0-9a-fA-F]{3,8}` in variable definitions. `css-first`: vars hold full colors (`oklch(...)` preferred); an HSL triple or an `hsl(var(--x))` wrapper there = BLOCKER (mixed modes). `legacy-config`: vars are HSL triples and `tailwind.config.ts` wraps them in `hsl(var(--x))`.
+- **Unmapped tokens.** `css-first`: every `--x` color var used as a class (`bg-x`, `text-x`) has `--color-x: var(--x)` in `@theme inline`; a class like `bg-success` without the mapping silently renders nothing = BLOCKER.
+- **Mode drift.** A new `tailwind.config.ts`, `@config`, `@tailwind base;` directives, `@import url(fonts.googleapis…)` or `@layer utilities { .x {…} }` (instead of `@utility x`) in a `css-first` project = BLOCKER. In any v4 project: `require(` in a JS config and `darkMode: ["class"]` (must be the string `"class"`).
+- **v3-era arbitrary CSS-variable syntax**: `max-h-[--var]`, `origin-[--var]`, `w-[--var]` silently do nothing in v4 (long `Select` lists overflow the screen). Must be `max-h-(--var)` / `origin-(--var)`; `[var(--x)]` is fine.
+- **Renamed v3 utilities** (WARN — open the hit and decide; in v4 these names still exist with a different size): `shadow-sm`/`shadow`, `rounded-sm`/`rounded`, `blur-sm`, `outline-none` used to hide focus (→ `outline-hidden`), bare `ring` (now 1px → `ring-3`), `flex-shrink-*`/`flex-grow-*`, `bg-opacity-*`/`text-opacity-*`, `overflow-ellipsis`. Flag only when the surrounding code was clearly written for v3 sizes.
+- **Hand-written shadcn primitives.** `components.json` must exist; `src/components/ui/*` comes from `npx shadcn add`. Hits for `React.forwardRef`, `hsl(var(--` or `[--` inside `src/components/ui/` in a `css-first` project = the file was hand-written or copied from a v3 snippet → WARN, re-add it with `npx shadcn@latest add <name> -o -y` (keep any project variants by re-applying them).
+- **React 19.** New code uses `ref` as a prop: `React.forwardRef` outside `ui/` = WARN; `<X.Provider value>` = NIT (`<X value>`).
+- **Next 16.** `middleware.ts` (must be `proxy.ts` exporting `proxy`) = BLOCKER; sync access to `params` / `searchParams` / `cookies()` / `headers()` in server files (no `await`) = BLOCKER; a `"lint": "next lint"` script = WARN (removed in 16). Auth gating done only in a client `useEffect` in `(app)/layout.tsx` while `proxy.ts` is absent = WARN.
+- **Form stack drift.** `package.json` major versions: `zod` and `@hookform/resolvers` must be compatible (resolvers 5 ↔ zod 4 or zod 3.25+); two different majors of the same lib across lockfile entries = WARN.
 
 ### 4. shadcn outline buttons with light text
 
@@ -147,4 +153,5 @@ You **cannot** regenerate the snapshot yourself (it needs DB access) — report 
 - Don't rewrite the design system from scratch — that's `lovable-design-system`'s job. If tokens are missing, *request* them by reporting the gap to the orchestrator.
 - Don't add new features or content. Only fix violations.
 - Don't change `policy.json` or the decision log — if the code consistently contradicts the policy, report it; the orchestrator decides.
-- Don't touch `src/components/ui/` shadcn primitives unless adding a variant the rest of the code already references or fixing the v3→v4 syntax in section 3.
+- Don't touch `src/components/ui/` shadcn primitives unless adding a variant the rest of the code already references or fixing section 3 findings (preferably by re-adding the primitive via the shadcn CLI).
+- Don't migrate a `legacy-config` project to `css-first` — report it as a suggestion; it's a separate, explicitly requested task.
