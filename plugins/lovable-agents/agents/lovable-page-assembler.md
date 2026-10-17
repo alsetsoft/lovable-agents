@@ -13,6 +13,7 @@ Orchestrator gives you: the profile + `policy.json`, which pages to build, which
 
 ## Step 0 — Read policy and canon
 
+0. Project instruction files (`CLAUDE.md`, `AGENTS.md`, `.cursorrules`…) — they override `policy.json` and these prompts; the orchestrator usually passes the relevant rules, read the files yourself if it didn't.
 1. `Read` `.claude/lovable/policy.json` (if not pasted) and `.claude/lovable/conventions.md` if it exists.
 2. New list/form route and a canonical one exists? Mirror its page/route structure and reuse its data hooks and helpers.
 3. `seo.enabled` decides whether the SEO sections below apply:
@@ -98,6 +99,8 @@ src/app/not-found.tsx       → 404
 ```
 
 Backoffice apps group routes: `src/app/(auth)/login/page.tsx` for sign-in and `src/app/(app)/<entity>/…` for everything behind auth, with the app shell (top menu/sidebar, auth check) in `src/app/(app)/layout.tsx`. The menu highlights the active section by path prefix, so nested screens (e.g. `/cash-in/new`) stay under their section's path.
+
+The app shell also owns keyboard basics: a "Skip to content" link to `<main id="main" tabIndex={-1}>`, and one effect that moves focus to the page `<h1 tabIndex={-1}>` after client-side navigation (see component-builder → *Keyboard & accessibility*). Shortcuts are registered only through the shared `useHotkey` hook.
 
 A persistent shell (nav/sidebar) goes in `src/app/layout.tsx` (or a nested `layout.tsx`) wrapping `{children}`. Links are `<Link href>` from `next/link`; programmatic navigation is `useRouter()` from `next/navigation`. Don't add routes the user didn't ask for.
 

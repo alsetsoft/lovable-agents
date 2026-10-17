@@ -17,8 +17,45 @@ A single plugin, `lovable-agents`, bundling:
 | `lovable-page-assembler` | Assembles full pages, routes, client-side data fetching (pagination/sort/search) and, for marketing, SEO. |
 | `lovable-db-snapshot` | Keeps an in-repo snapshot of the DB schema (`snapshots/db/schema.sql` + `SCHEMA.md`) for Supabase-like providers; runs after any schema change. |
 | `lovable-design-reviewer` | Final pass: design tokens, policy compliance, CRUD hardening, canon conformance, DB snapshot, and (marketing) SEO. Fixes what it finds. |
+| `lovable-visual-qa` | Opens the running app in headless Chromium: screenshots at 1366/1920/768 (light/dark), forms fit the laptop screen without scrolling, no horizontal overflow, console/HTTP errors, axe-core WCAG 2.2 AA; grades the screenshots. Report-only. |
 
-Plus two slash commands: `/lovable` kicks off a build from a single prompt; `/lovable-fix` applies a UI fix or behaviour change app-wide (see *Consistency*).
+Plus slash commands:
+
+| Command | What it does |
+|---------|--------------|
+| `/lovable <what to build>` | Build a new app or a new feature/entity |
+| `/lovable-adopt` | Connect the agents to an existing project: derive `policy.json` + `conventions.md` from its CLAUDE.md/AGENTS.md and code (no code changes) |
+| `/lovable-fix <what's wrong>` | Apply a UI fix or behaviour change app-wide (see *Consistency*) |
+| `/lovable-lesson <feedback>` | Turn client/QA feedback into a durable rule (project instruction file + conventions) |
+
+## Quick guide
+
+**New project**
+
+```text
+/lovable backoffice CRM for a furniture store: clients, orders, payments
+```
+
+The orchestrator scaffolds the app, writes `.claude/lovable/policy.json`, builds the first entity end-to-end and records it as the canon in `conventions.md`. Later entities copy it.
+
+**Existing project** (once per repo)
+
+```text
+/lovable-adopt
+```
+
+Reads `CLAUDE.md` / `AGENTS.md` and the code and writes only `.claude/lovable/policy.json` + `conventions.md`: inferred settings with evidence, the canonical list/form, shared primitives, the patterns registry, divergent clusters and the decision log. Check the "assumed" values it reports, then commit both files so the whole team's agents follow the same rules. Instruction files always win over the policy and the agents' defaults.
+
+**Day to day**
+
+| You want to… | Use |
+|--------------|-----|
+| add a screen / entity / feature | `/lovable add a suppliers list and form` (or just ask) |
+| fix something that looks or behaves wrong | `/lovable-fix archived records still appear in pickers` — fixed everywhere, not just on one screen |
+| make sure a client/QA remark never repeats | `/lovable-lesson QA: after saving, the form jumps back to the list; client wants to stay on the record` |
+| keep it to a single screen | add "only on this screen" |
+
+Commit `.claude/lovable/` together with the code changes it describes.
 
 ## Install
 
@@ -67,7 +104,8 @@ Every decision that differs between projects lives in one committed file in the 
     "searchDebounceMs": 500, "searchMode": "words", "highlightMatches": true, "archivedAtEnd": true
   },
   "data": { "supabaseKeys": "env" },
-  "seo": { "enabled": false }
+  "seo": { "enabled": false },
+  "qa": { "enabled": true, "blocking": false }
 }
 ```
 
@@ -82,6 +120,7 @@ Every decision that differs between projects lives in one committed file in the 
 | `ui.mobileCards` | bool | Table + card stack on mobile vs table only |
 | `data.supabaseKeys` | `env` / `inline` | Where the public Supabase URL/key come from |
 | `seo.enabled` | bool | Full SEO audit vs titles only |
+| `qa.enabled` / `qa.blocking` | bool | Run visual QA after UI changes / let its BLOCKERs stop the build (start advisory) |
 
 ## Conventions & golden reference — `.claude/lovable/conventions.md`
 
@@ -128,9 +167,19 @@ Detailed rules for data-heavy screens live once, as skills in `plugins/lovable-a
 
 They're also available to the main session as `lovable-agents:<skill>`. To change a data-screen rule, edit the skill — not the agents.
 
+## Visual QA
+
+`lovable-visual-qa` runs after the reviewer on every UI change. It installs Playwright + axe once into `~/.cache/lovable-qa` (never into your project), uses your running dev server (or starts and stops one), and writes screenshots + `results.json` to `.claude/lovable/qa/<date>/` (gitignored).
+
+- Logged-in screens need test credentials: `export LOVABLE_QA_EMAIL=… LOVABLE_QA_PASSWORD=…` or `.claude/lovable/qa.local.json` (gitignored). Without them only public pages are checked.
+- It is read-only: opens pages and clicks the first table row to reach a detail screen. No submits, no data writes.
+- Findings are advisory until you set `"qa": { "blocking": true }`.
+
 ## Hardening
 
 The builder implements and the reviewer greps for generic CRUD bugs: double submit (ref-based submit lock held through navigation), Radix `Select` spurious `onValueChange("")` wiping form values, negative numbers via paste, native date inputs in non-English locales, archived records offered in new selections, user search text interpolated into PostgREST filters, open redirects via `?from=`, out-of-range pages (416), truncated text without tooltips.
+
+Keyboard & accessibility (backoffice): one `useHotkey` hook (letters matched by physical key, so shortcuts work on non-Latin layouts) — `Ctrl/⌘+S` saves through validation and the submit lock, `/` focuses search, `Esc` closes (first Esc leaves a field); clickable table rows contain a real link (Tab, Enter, Ctrl/⌘-click → new tab); `aria-sort` on sortable headers; skip link and focus to the page title after navigation; visible focus rings; status never shown by color alone. Reviewer section 14 audits it.
 
 ## Auto-install for a project (team-wide)
 
@@ -275,10 +324,14 @@ lovable-agents/
 │   └── lovable-agents/
 │       ├── .claude-plugin/
 │       │   └── plugin.json             # plugin manifest (name: "lovable-agents")
-│       ├── agents/                     # the lovable-* agents (.md)
+│       ├── agents/                     # the 8 lovable-* agents (.md)
 │       ├── skills/                     # pattern skills: <name>/SKILL.md
+│       ├── scripts/
+│       │   └── visual-qa.mjs           # Playwright + axe runner used by lovable-visual-qa
 │       └── commands/
-│           ├── lovable.md              # the /lovable command
-│           └── lovable-fix.md          # the /lovable-fix command (app-wide fixes)
+│           ├── lovable.md              # /lovable — build
+│           ├── lovable-adopt.md        # /lovable-adopt — connect an existing project
+│           ├── lovable-fix.md          # /lovable-fix — app-wide fixes
+│           └── lovable-lesson.md       # /lovable-lesson — feedback → durable rule
 └── README.md
 ```
