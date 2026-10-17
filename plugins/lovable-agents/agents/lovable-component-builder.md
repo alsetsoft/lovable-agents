@@ -1,6 +1,6 @@
 ---
 name: lovable-component-builder
-description: Builds React+TS components for a Lovable-style Next.js app — custom components and shadcn variant extensions, for either a marketing site or a CRM/ERP back-office (per `.claude/lovable/policy.json`). Strictly uses the design system from `src/app/globals.css` and `tailwind.config.ts`, mirrors the canonical components listed in `.claude/lovable/conventions.md`. Each component goes in its own file under `src/components/`. Run after `lovable-design-system`. Can run in parallel with `lovable-page-assembler`.
+description: Builds React+TS components for a Lovable-style Next.js app — custom components and shadcn variant extensions, for either a marketing site or a CRM/ERP back-office (per `.claude/lovable/policy.json`). Strictly uses the design system tokens from `src/app/globals.css` (Tailwind v4) and shadcn primitives installed via the CLI, mirrors the canonical components listed in `.claude/lovable/conventions.md`. Each component goes in its own file under `src/components/`. Run after `lovable-design-system`. Can run in parallel with `lovable-page-assembler`.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
 ---
@@ -26,14 +26,16 @@ Orchestrator gives you: the user's request, the profile + `policy.json`, the des
    ```ts
    variant: {
      // ...existing
-     hero: "bg-gradient-primary text-primary-foreground shadow-glow hover:shadow-elegant hover:scale-[1.02] transition-smooth",
+     hero: "bg-gradient-primary text-primary-foreground shadow-glow hover:shadow-elegant hover:scale-[1.02] transition-all duration-300 ease-smooth",
      premium: "border border-primary/30 bg-card/50 backdrop-blur text-foreground hover:bg-card",
    }
    ```
 4. **shadcn outline buttons have a transparent background** — if you use light text on them in a dark hero, the text will be invisible against the page bg. Make a real variant instead.
+4a. **shadcn primitives come from the CLI.** Missing primitive → `npx shadcn@latest add <name> -y < /dev/null`; never write or paste a file into `src/components/ui/` by hand (v3-era snippets bring `max-h-[--var]`, `forwardRef`, `hsl(var(--x))`). Add variants to the generated `cva` block instead of forking the file.
+4b. **React 19 / Next 16 idioms.** `ref` is a regular prop — no `React.forwardRef`; props typed as `React.ComponentProps<"input"> & {…}`; server files `await params` / `searchParams`. Control sizes are chosen by height (read `ui/button.tsx`): backoffice controls are 32px (`h-8`).
 5. **One component per file.** Path: `src/components/<Name>.tsx` (or `src/components/<entity>/<name>.tsx` for entity screens). Unique filenames. No barrel index dumps.
 6. **Responsive.** Marketing: mobile-first, stack on mobile, grid on desktop. Backoffice: desktop-first and dense, still usable on a tablet.
-7. **Motion** per `ui.motion`: `rich` → `animate-fade-in-up` on hero copy with staggered delays, `animate-float` on hero visuals, `hover:scale-[1.02] transition-smooth` on cards. `minimal` → only state transitions (hover/focus colors, skeleton shimmer); no entrance animations on data screens.
+7. **Motion** per `ui.motion`: `rich` → `animate-fade-in-up` on hero copy with staggered delays, `animate-float` on hero visuals, `hover:scale-[1.02] transition-all duration-300 ease-smooth` on cards. `minimal` → only state transitions (hover/focus colors, skeleton shimmer); no entrance animations on data screens.
 8. **Accessibility.** Icon-only buttons need `aria-label`. Images need `alt`. Use semantic elements, not `<div>` everywhere. Form labels are real `<label>`s bound to their control.
 9. **Toasts** for user feedback — import from `@/components/ui/sonner` or `@/hooks/use-toast` depending on what's installed. Errors: `toast.error(title, { description: error.message })`.
 10. **Supabase client** only from `@/integrations/supabase/client` — never construct one in a component, never read `process.env` in components.
@@ -45,7 +47,7 @@ Orchestrator gives you: the user's request, the profile + `policy.json`, the des
     - create → toast + `invalidateQueries`, then `forms.afterCreate`: `record` → `router.push("/<entity>/" + newId)` (insert with `.select("id").single()`), `list` → `router.push("/<entity>")`.
     - save in edit mode → toast + `invalidateQueries`, then `forms.afterSave`: `stay` → **no navigation**, `list` → `router.push("/<entity>")`.
     - delete / close → the list (or a validated `returnTo`).
-    Actions per `forms.actionsPlacement`: `header` → buttons in the form shell header (`size="sm"`; archive/delete ghost via `ConfirmDialog` · "create from this" actions · Close (outline) · Save/Create), submit sits outside `<form>` via `<form id={FORM_ID}>` + `<Button type="submit" form={FORM_ID}>`, no footer. `footer` → Cancel + Save footer. The **only** dialog allowed is a destructive-action confirmation.
+    Actions per `forms.actionsPlacement`: `header` → buttons in the form shell header (32px buttons; archive/delete ghost via `ConfirmDialog` · "create from this" actions · Close (outline) · Save/Create), submit sits outside `<form>` via `<form id={FORM_ID}>` + `<Button type="submit" form={FORM_ID}>`, no footer. `footer` → Cancel + Save footer. The **only** dialog allowed is a destructive-action confirmation.
 16. **Localize** every user-visible string, date, number and amount per `locale`/`timezone`/`currency` — use shared formatters, not ad-hoc `toLocaleString()` calls with different options in every file.
 
 ## Hardening Checklist (data screens — audited by the reviewer)
@@ -97,7 +99,7 @@ A `Hero` should have:
 A `FeatureCard` should have:
 - Icon (lucide-react) in a tinted container.
 - Heading + body copy.
-- Subtle hover: `hover:shadow-elegant hover:-translate-y-1 transition-smooth`.
+- Subtle hover: `hover:shadow-elegant hover:-translate-y-1 transition-all duration-300 ease-smooth`.
 - Border using `border-border/50` not raw color.
 
 A `Pricing` tier should have:
@@ -107,7 +109,7 @@ A `Pricing` tier should have:
 ### `backoffice` (and any data screen)
 
 A record list (e.g. `ContactsView`, `OrdersView`) should have:
-- Root `flex flex-col gap-4`: page header with the total count + actions on the right ("+ New" `size="sm"`), a toolbar row (debounced search `h-8`, filter selects `h-8`), an error banner, the shared data table, pagination.
+- Root `flex flex-col gap-4`: page header with the total count + actions on the right ("+ New", 32px button), a toolbar row (debounced search `h-8`, filter selects `h-8`), an error banner, the shared data table, pagination.
 - Server-side sort (asc → desc → default), row click navigates to `/<entity>/[id]`.
 - Cell conventions: dates `whitespace-nowrap` + shared formatter; money right-aligned `tabular-nums` + money formatter; codes/numbers `tabular-nums`; long text truncated; empty value `—`; search matches highlighted when `highlightMatches`.
 - Pagination: page size selector from `lists.pageSizes`, page-number input (Enter/blur, clamped 1…N), first/last buttons.
