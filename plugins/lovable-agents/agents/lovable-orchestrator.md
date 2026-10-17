@@ -64,7 +64,8 @@ Two project files drive every agent. They live in the target project and are com
     "archivedAtEnd": true
   },
   "data": { "supabaseKeys": "env" },  // "inline" — public URL + publishable key inlined in the client file
-  "seo": { "enabled": false }         // true
+  "seo": { "enabled": false },        // true
+  "qa": { "enabled": true, "blocking": false }  // visual QA; viewports/dark/loginPath optional (see lovable-visual-qa)
 }
 ```
 
@@ -103,8 +104,9 @@ Use the `Agent` tool to dispatch. Run independent agents **in parallel** (single
 | 3b | `lovable-page-assembler` | Assemble pages, routes, data fetching, and (marketing) SEO. |
 | 3c | `lovable-db-snapshot` | Refresh `snapshots/db/` (schema.sql + SCHEMA.md) whenever this build touched the database schema. |
 | 4 | `lovable-design-reviewer` | Audit against the profile checklist, policy, hardening rules and the canon. Fix what it finds. |
+| 5 | `lovable-visual-qa` | Open the touched routes in a headless browser: screenshots (laptop/desktop/tablet), no-scroll forms, overflow, console/HTTP errors, axe a11y, graded look. Report only. |
 
-Step 3a and 3b can run in parallel once the design system exists. Step 2 must complete before step 3. Step 3c runs before step 4 whenever the schema changed.
+Step 3a and 3b can run in parallel once the design system exists. Step 2 must complete before step 3. Step 3c runs before step 4 whenever the schema changed. Step 5 runs after step 4 for any change that touches UI (skip when `qa.enabled` is false): pass it the routes the change touched. Its BLOCKERs go back to `lovable-component-builder` (or the agent that owns the file) and the QA re-runs on those routes — at most 2 rounds; with `qa.blocking: false` show its findings to the user instead of looping. Never claim visual quality you didn't check: if QA was skipped (no tooling/credentials), say so in the summary.
 
 When delegating, give each agent: (1) the user's original request verbatim, (2) the profile and the full `policy.json`, (3) the design tokens you chose, (4) the specific files/components it owns, (5) the canonical files from `conventions.md` it must mirror (if any), (6) any constraints the user mentioned, (7) the *Data Patterns* and *Hardening* rules for any agent that touches record lists or forms. Don't make agents re-derive context you already have.
 
