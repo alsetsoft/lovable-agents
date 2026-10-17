@@ -213,6 +213,7 @@ These are generic bugs that QA keeps finding in CRUD apps. The component-builder
 6. **Safe search input**: user text is never string-interpolated into PostgREST filter syntax (`.or()`, `.ilike()` in a GET URL) — commas/parentheses break the parser and WAF rules block SQL-looking strings. Sanitize per word, or send the text in an RPC body.
 7. **`returnTo` navigation**: when a card opened from another record should return there, accept only internal paths (`/…`, not `//` or a scheme) — never an open redirect.
 8. **Truncated text** (`truncate`) gets a tooltip with the full value (one global mechanism, not ad-hoc `title` everywhere).
+9. **Keyboard & a11y** (component-builder → *Keyboard & accessibility*): one `useHotkey` hook matching letters by physical key (non-Latin layouts); `Ctrl/⌘+S` submits through the submit lock, `/` focuses search, `Esc` = Close; clickable rows contain a real `<Link>`; sortable headers carry `aria-sort`; skip link + focus to `<h1>` after navigation; visible focus rings; status never by color alone.
 
 ## Database Snapshot Rule (enforce whenever the schema changes)
 

@@ -99,6 +99,8 @@ src/app/not-found.tsx       → 404
 
 Backoffice apps group routes: `src/app/(auth)/login/page.tsx` for sign-in and `src/app/(app)/<entity>/…` for everything behind auth, with the app shell (top menu/sidebar, auth check) in `src/app/(app)/layout.tsx`. The menu highlights the active section by path prefix, so nested screens (e.g. `/cash-in/new`) stay under their section's path.
 
+The app shell also owns keyboard basics: a "Skip to content" link to `<main id="main" tabIndex={-1}>`, and one effect that moves focus to the page `<h1 tabIndex={-1}>` after client-side navigation (see component-builder → *Keyboard & accessibility*). Shortcuts are registered only through the shared `useHotkey` hook.
+
 A persistent shell (nav/sidebar) goes in `src/app/layout.tsx` (or a nested `layout.tsx`) wrapping `{children}`. Links are `<Link href>` from `next/link`; programmatic navigation is `useRouter()` from `next/navigation`. Don't add routes the user didn't ask for.
 
 ### Create & edit are routes, not modals
