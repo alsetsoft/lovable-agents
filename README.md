@@ -2,7 +2,7 @@
 
 Claude Code plugin that builds Next.js 16 + React 19 + Tailwind v4 + shadcn + Supabase apps — landing pages (`marketing`) and CRM/ERP back-offices (`backoffice`) — and keeps every screen consistent, tested and reviewed.
 
-> **3.0 renames the plugin** `lovable-agents` → `vlasnacrm-agents` (repo `alsetsoft/vlasnacrm-agents-plugin`). Migrate once: `/plugin uninstall lovable-agents@alsetsoft`, `/plugin marketplace remove alsetsoft`, then *Install* below; in project `.claude/settings.json` replace `lovable-agents@alsetsoft` with `vlasnacrm-agents@alsetsoft`. Skill calls become `/vlasnacrm-agents:<skill>`; commands (`/lovable…`) and agent names are unchanged.
+> **2.2 renames the plugin** `lovable-agents` → `vlasnacrm-agents` (repo `alsetsoft/vlasnacrm-agents-plugin`). Migrate once: `/plugin uninstall lovable-agents@alsetsoft`, `/plugin marketplace remove alsetsoft`, then *Install* below; in project `.claude/settings.json` replace `lovable-agents@alsetsoft` with `vlasnacrm-agents@alsetsoft`. Skill calls become `/vlasnacrm-agents:<skill>`; commands (`/lovable…`) and agent names are unchanged.
 >
 > **2.0 is breaking:** project files moved from `.claude/lovable/` to `.lovable/`. Agents move it on the next write, or run `git mv .claude/lovable .lovable`.
 
