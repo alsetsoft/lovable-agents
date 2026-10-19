@@ -4,6 +4,20 @@ Shared [Claude Code](https://docs.claude.com/en/docs/claude-code) agents for bui
 
 This repo is a **Claude Code plugin marketplace**. Install it once in any project (or globally) and every project gets the same agents, commands and pattern skills. Edit an agent here, push, and all projects pull the update — no more copy-pasting between repos.
 
+## What's new in 2.0 (breaking)
+
+**Breaking:** project files moved from `.claude/lovable/` to **`.lovable/`** at the project root (`policy.json`, `conventions.md`, `qa/`, `qa.local.json`). Claude Code treats everything under `.claude/` as sensitive — each write needed a permission prompt and headless/CI runs failed. Agents read a legacy `.claude/lovable/` and `git mv` it to `.lovable/` on the next write; to migrate by hand: `git mv .claude/lovable .lovable` and update `.gitignore` entries (`.lovable/qa/`, `.lovable/qa.local.json`).
+
+New in 2.0:
+- **E2E tests** — `lovable-e2e-writer` writes Playwright tests for every feature (CRUD + relationships) and a **regression test, written first, for every bug fix**; `e2e-crud` skill (safe test env, naming that reads as test cases, CI on the GitHub free plan).
+- **Testers' PDF** — `test-docs` skill + `scripts/test-docs.mjs`: what's new, entity & relationship map, flows, test cases with steps/status, regressions, gaps (uk/en).
+- **Reliable orchestration** — agents are dispatched in the foreground; the orchestrator never returns mid-pipeline (headless/CI runs no longer get cut off).
+- Since 1.x: Tailwind v4 / shadcn CLI / React 19 / Next 16 stack, consistency rule + `/lovable-fix`, `/lovable-adopt`, `/lovable-lesson`, `lovable-visual-qa`, keyboard & a11y, 8 pattern skills.
+
+Verified end to end on a lab project (local Supabase): full `/lovable` build, `/lovable-fix`, `/lovable-lesson`, `/lovable-adopt` on a real ERP repo copy, and the testers' PDF.
+
+After updating the plugin, run `/reload-plugins` (or restart Claude Code).
+
 ## What's inside
 
 A single plugin, `lovable-agents`, bundling:
@@ -18,6 +32,7 @@ A single plugin, `lovable-agents`, bundling:
 | `lovable-db-snapshot` | Keeps an in-repo snapshot of the DB schema (`snapshots/db/schema.sql` + `SCHEMA.md`) for Supabase-like providers; runs after any schema change. |
 | `lovable-design-reviewer` | Code audit: tokens & stack, policy, the pattern skills' *Audit* tables (CRUD hardening), canon, pattern consistency, keyboard & a11y, DB snapshot, (marketing) SEO. Fixes what it finds. |
 | `lovable-visual-qa` | Opens the running app in headless Chromium: screenshots at 1366/1920/768 (light/dark), forms fit the laptop screen without scrolling, no horizontal overflow, console/HTTP errors, axe-core WCAG 2.2 AA; grades the screenshots. Report-only. |
+| `lovable-e2e-writer` | Playwright e2e tests: CRUD + relationships for every feature, a regression test (written first) for every bug fix; titles/steps are test cases in the UI language; sets up Playwright + CI once. Never runs against production. |
 
 Plus slash commands:
 
@@ -29,7 +44,7 @@ Plus slash commands:
 | `/lovable-lesson <feedback>` | Turn client/QA feedback into a durable rule (project instruction file + conventions) |
 | `/lovable-agents:<skill> <task>` | Do one task by a pattern skill's recipe (see *Pattern skills*) |
 
-And 8 **pattern skills** — recipes for data screens (lists, forms, documents with lines, bulk actions, filters, dashboards, tabbed cards, export/print), see below.
+And 10 **skills** — recipes for data screens (lists, forms, documents with lines, bulk actions, filters, dashboards, tabbed cards, export/print) plus e2e tests and the testers' PDF, see below.
 
 ## Quick guide
 
@@ -39,7 +54,7 @@ And 8 **pattern skills** — recipes for data screens (lists, forms, documents w
 /lovable backoffice CRM for a furniture store: clients, orders, payments
 ```
 
-The orchestrator scaffolds the app, writes `.claude/lovable/policy.json`, builds the first entity end-to-end and records it as the canon in `conventions.md`. Later entities copy it.
+The orchestrator scaffolds the app, writes `.lovable/policy.json`, builds the first entity end-to-end and records it as the canon in `conventions.md`. Later entities copy it.
 
 **Existing project** (once per repo)
 
@@ -47,7 +62,7 @@ The orchestrator scaffolds the app, writes `.claude/lovable/policy.json`, builds
 /lovable-adopt
 ```
 
-Reads `CLAUDE.md` / `AGENTS.md` and the code and writes only `.claude/lovable/policy.json` + `conventions.md`: inferred settings with evidence, the canonical list/form, shared primitives, the patterns registry, divergent clusters and the decision log. Check the "assumed" values it reports, then commit both files so the whole team's agents follow the same rules. Instruction files always win over the policy and the agents' defaults.
+Reads `CLAUDE.md` / `AGENTS.md` and the code and writes only `.lovable/policy.json` + `conventions.md`: inferred settings with evidence, the canonical list/form, shared primitives, the patterns registry, divergent clusters and the decision log. Check the "assumed" values it reports, then commit both files so the whole team's agents follow the same rules. Instruction files always win over the policy and the agents' defaults.
 
 **Day to day**
 
@@ -58,8 +73,10 @@ Reads `CLAUDE.md` / `AGENTS.md` and the code and writes only `.claude/lovable/po
 | make sure a client/QA remark never repeats | `/lovable-lesson QA: after saving, the form jumps back to the list; client wants to stay on the record` |
 | keep it to a single screen | add "only on this screen" |
 | build one thing by a known recipe | `/lovable-agents:document-lines purchase order form with lines` (see *Pattern skills*) |
+| fix a bug | describe it (or `/lovable-fix …`) — a `@regression` e2e test is written first, then the fix |
+| give QA the current test documentation | `/lovable-agents:test-docs` → PDF: what's new, relationship map, test cases with status, regressions, gaps |
 
-Commit `.claude/lovable/` together with the code changes it describes.
+Commit `.lovable/` together with the code changes it describes.
 
 ## Install
 
@@ -91,7 +108,9 @@ The orchestrator picks a **profile** first (or takes it from the first word of `
 | Lists | table + mobile cards, 20 per page | shared data table, selectable 50/100/200, persisted |
 | After "Save" | back to the list | stay on the record; create → the new record |
 
-## Project policy — `.claude/lovable/policy.json`
+## Project policy — `.lovable/policy.json`
+
+Project files live in `.lovable/` at the project root (not `.claude/`, which Claude Code treats as sensitive — every write there needs a permission prompt and fails in headless/CI runs; older `.claude/lovable/` folders are read and moved automatically).
 
 Every decision that differs between projects lives in one committed file in the **target project**, not in these prompts. The orchestrator writes it on cold start (profile defaults + whatever the user/client asked for); every agent reads it first; the reviewer enforces it. Edit it by hand any time — agents never silently overwrite it.
 
@@ -109,7 +128,8 @@ Every decision that differs between projects lives in one committed file in the 
   },
   "data": { "supabaseKeys": "env" },
   "seo": { "enabled": false },
-  "qa": { "enabled": true, "blocking": false }
+  "qa": { "enabled": true, "blocking": false },
+  "e2e": { "enabled": true, "required": false }
 }
 ```
 
@@ -125,8 +145,9 @@ Every decision that differs between projects lives in one committed file in the 
 | `data.supabaseKeys` | `env` / `inline` | Where the public Supabase URL/key come from |
 | `seo.enabled` | bool | Full SEO audit vs titles only |
 | `qa.enabled` / `qa.blocking` | bool | Run visual QA after UI changes / let its BLOCKERs stop the build (start advisory) |
+| `e2e.enabled` / `e2e.required` | bool | Write e2e tests for features / let the reviewer block a feature without tests (bug fixes always get a regression test) |
 
-## Conventions & golden reference — `.claude/lovable/conventions.md`
+## Conventions & golden reference — `.lovable/conventions.md`
 
 After the first complete entity (list + create/edit form) passes review, the orchestrator records it as the **canon**: the canonical list file, the canonical form file, shared primitives (data table, pagination, form shell, submit lock, search helper, formatters…) and a dated **decision log** of client requirements. Later lists/forms copy the canon instead of re-deriving layout from prose; the reviewer flags divergence and re-implemented primitives.
 
@@ -168,6 +189,8 @@ Detailed rules for data-heavy screens live once, as skills in `plugins/lovable-a
 | `dashboard-charts` | server aggregates, KPI tiles, chart choice and tokens, report totals, invalidation |
 | `master-detail-tabs` | tabs that keep editor state, related records, append-only history |
 | `export-print` | typed Excel export, all-or-nothing import, print routes, sandboxed templates |
+| `e2e-crud` | Playwright setup (safe test env, auth, CI on the free plan), CRUD/relationship tests that read as test cases, regression tests for bug fixes |
+| `test-docs` | generates the testers' PDF from the e2e suite + DB schema + `e2e/relations.yaml` + git history |
 
 To change a data-screen rule, edit the skill — not the agents.
 
@@ -225,11 +248,18 @@ Commit it with the project — teammates get it too; call it as `/<name>` or let
 
 ## Visual QA
 
-`lovable-visual-qa` runs after the reviewer on every UI change. It installs Playwright + axe once into `~/.cache/lovable-qa` (never into your project), uses your running dev server (or starts and stops one), and writes screenshots + `results.json` to `.claude/lovable/qa/<date>/` (gitignored).
+`lovable-visual-qa` runs after the reviewer on every UI change. It installs Playwright + axe once into `~/.cache/lovable-qa` (never into your project), uses your running dev server (or starts and stops one), and writes screenshots + `results.json` to `.lovable/qa/<date>/` (gitignored).
 
-- Logged-in screens need test credentials: `export LOVABLE_QA_EMAIL=… LOVABLE_QA_PASSWORD=…` or `.claude/lovable/qa.local.json` (gitignored). Without them only public pages are checked.
+- Logged-in screens need test credentials: `export LOVABLE_QA_EMAIL=… LOVABLE_QA_PASSWORD=…` or `.lovable/qa.local.json` (gitignored). Without them only public pages are checked.
 - It is read-only: opens pages and clicks the first table row to reach a detail screen. No submits, no data writes.
 - Findings are advisory until you set `"qa": { "blocking": true }`.
+
+## E2E tests & the testers' document
+
+- **Every feature** gets Playwright tests from `lovable-e2e-writer` (CRUD, relationships, `@smoke` for the core path); **every bug fix** gets a `@regression` test that reproduces the bug before the fix.
+- Test titles and `test.step`s are written as real test cases in the app's UI language (`<action>: <expected result>`), tagged by entity, annotated with relationships and bug tickets.
+- Tests run only against a test environment (separate test database / local stack); the config refuses forbidden (production) hosts. CI: smoke on every PR, full suite nightly — fits the GitHub free plan.
+- `/lovable-agents:test-docs` (or a CI step) turns the suite into a PDF for QA: what's new since the last tag, entity & relationship map (DB schema + `e2e/relations.yaml`), business flows, test cases by module with steps/expected/status, regression tests, and what isn't covered. Generated by `scripts/test-docs.mjs`, never hand-written.
 
 ## Hardening
 
@@ -388,10 +418,11 @@ lovable-agents/
 │   └── lovable-agents/
 │       ├── .claude-plugin/
 │       │   └── plugin.json             # plugin manifest (name: "lovable-agents")
-│       ├── agents/                     # the 8 lovable-* agents (.md)
+│       ├── agents/                     # the 9 lovable-* agents (.md)
 │       ├── skills/                     # pattern skills: <name>/SKILL.md
 │       ├── scripts/
-│       │   └── visual-qa.mjs           # Playwright + axe runner used by lovable-visual-qa
+│       │   ├── visual-qa.mjs           # Playwright + axe runner used by lovable-visual-qa
+│       │   └── test-docs.mjs           # e2e suite → testers' PDF generator (test-docs skill)
 │       └── commands/
 │           ├── lovable.md              # /lovable — build
 │           ├── lovable-adopt.md        # /lovable-adopt — connect an existing project

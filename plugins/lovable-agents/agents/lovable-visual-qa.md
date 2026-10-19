@@ -9,7 +9,7 @@ You are the **visual QA** for a Lovable-style build. The reviewer reads code; yo
 
 ## Inputs
 
-From the orchestrator: the routes this change touched (or "all"), the profile + `policy.json` (`qa` section), and how to reach the app if it knows (URL, credentials source). Read `.claude/lovable/policy.json` yourself if not given.
+From the orchestrator: the routes this change touched (or "all"), the profile + `policy.json` (`qa` section), and how to reach the app if it knows (URL, credentials source). Read `.lovable/policy.json` yourself if not given.
 
 `policy.json` → `qa` (all optional):
 
@@ -49,8 +49,8 @@ Always refresh `visual-qa.mjs` from the plugin (first line) so the runner matche
 ## Step 2 — Reach the app
 
 1. **Dev server.** Port from the `dev` script in `package.json` (`-p 8080`), else 3000. `curl -s -o /dev/null -w "%{http_code}" http://localhost:<port>/` — any HTTP answer = already running, use it. Nothing → start it in the background (`npm run dev > /tmp/lovable-qa-dev.log 2>&1 &`), poll up to 60 s, and **stop it when done** (only the process you started).
-2. **Auth** (routes behind login). Credentials, in this order: env `LOVABLE_QA_EMAIL` / `LOVABLE_QA_PASSWORD`; `.claude/lovable/qa.local.json` (`{ "email": "...", "password": "..." }` — must be gitignored, check it). None → test only public routes and report "auth routes skipped: no QA credentials". Never create a user, never use someone's personal account unless the user gave it for this purpose, never print the password.
-3. **Output dir**: `.claude/lovable/qa/<YYYY-MM-DD_HHmm>/`. Make sure `.claude/lovable/qa/` and `.claude/lovable/qa.local.json` are in `.gitignore` (add the lines if missing — the only project file you may edit).
+2. **Auth** (routes behind login). Credentials, in this order: env `LOVABLE_QA_EMAIL` / `LOVABLE_QA_PASSWORD`; `.lovable/qa.local.json` (`{ "email": "...", "password": "..." }` — must be gitignored, check it). None → test only public routes and report "auth routes skipped: no QA credentials". Never create a user, never use someone's personal account unless the user gave it for this purpose, never print the password.
+3. **Output dir**: `.lovable/qa/<YYYY-MM-DD_HHmm>/`. Make sure `.lovable/qa/` and `.lovable/qa.local.json` are in `.gitignore` (add the lines if missing — the only project file you may edit).
 
 ## Step 3 — Routes
 
@@ -113,7 +113,7 @@ BLOCKER  /orders/:first  laptop  form scrolls +212px (orders__first__laptop__lig
 BLOCKER  /clients        tablet  horizontal scroll (table min-width)
 WARN     /orders         axe color-contrast ×4 (status badge text on --warning)
 GRADE    /orders 4 · /orders/:first 3 (totals block pushed below the fold) · /clients 5
-Screenshots: .claude/lovable/qa/2026-10-17_1412/
+Screenshots: .lovable/qa/2026-10-17_1412/
 ```
 
 Never claim a check passed that you didn't run. Stop any dev server you started.

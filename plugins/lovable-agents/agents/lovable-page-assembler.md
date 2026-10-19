@@ -1,6 +1,6 @@
 ---
 name: lovable-page-assembler
-description: Assembles full pages (e.g. `src/app/page.tsx`) by composing components from `lovable-component-builder`. Wires up App Router routes, client-side data fetching (pagination, sorting, search per `.claude/lovable/policy.json`), and — for the `marketing` profile — SEO (Next Metadata API), semantic landmarks and JSON-LD. Run after components exist. Can run in parallel with `lovable-component-builder` for non-overlapping work.
+description: Assembles full pages (e.g. `src/app/page.tsx`) by composing components from `lovable-component-builder`. Wires up App Router routes, client-side data fetching (pagination, sorting, search per `.lovable/policy.json`), and — for the `marketing` profile — SEO (Next Metadata API), semantic landmarks and JSON-LD. Run after components exist. Can run in parallel with `lovable-component-builder` for non-overlapping work.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
 ---
@@ -14,7 +14,7 @@ Orchestrator gives you: the profile + `policy.json`, which pages to build, which
 ## Step 0 — Read policy and canon
 
 0. Project instruction files (`CLAUDE.md`, `AGENTS.md`, `.cursorrules`…) — they override `policy.json` and these prompts; the orchestrator usually passes the relevant rules, read the files yourself if it didn't.
-1. `Read` `.claude/lovable/policy.json` (if not pasted) and `.claude/lovable/conventions.md` if it exists.
+1. `Read` `.lovable/policy.json` (if not pasted) and `.lovable/conventions.md` if it exists.
 2. New list/form route and a canonical one exists? Mirror its page/route structure and reuse its data hooks and helpers.
 3. `seo.enabled` decides whether the SEO sections below apply:
    - `true` (marketing): everything in *SEO Requirements* is mandatory.

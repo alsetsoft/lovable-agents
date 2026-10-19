@@ -1,6 +1,6 @@
 ---
 name: lovable-design-reviewer
-description: Audits the codebase against Lovable's rules for the project's profile (`marketing` or `backoffice`, from `.claude/lovable/policy.json`) and fixes violations — direct color classes, inline color styles, token/stack hygiene (Tailwind v4 css-first vs legacy config, v3-era utilities, hand-written shadcn primitives, React 19 / Next 16 idioms), policy compliance (navigation after save, page size, mobile cards, keys), CRUD hardening (double submit, Radix Select wipe, negative numbers, unsafe search interpolation, native date inputs, open redirects), conformance to the canonical list/form in `.claude/lovable/conventions.md`, pattern consistency (one implementation per cross-cutting UI behaviour, per the Patterns registry), DB snapshot freshness, and — for marketing — SEO and polish. Run as the final step of every build.
+description: Audits the codebase against Lovable's rules for the project's profile (`marketing` or `backoffice`, from `.lovable/policy.json`) and fixes violations — direct color classes, inline color styles, token/stack hygiene (Tailwind v4 css-first vs legacy config, v3-era utilities, hand-written shadcn primitives, React 19 / Next 16 idioms), policy compliance (navigation after save, page size, mobile cards, keys), CRUD hardening (double submit, Radix Select wipe, negative numbers, unsafe search interpolation, native date inputs, open redirects), conformance to the canonical list/form in `.lovable/conventions.md`, pattern consistency (one implementation per cross-cutting UI behaviour, per the Patterns registry), DB snapshot freshness, and — for marketing — SEO and polish. Run as the final step of every build.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
 ---
@@ -10,8 +10,8 @@ You are the **final-pass reviewer** for a Lovable-style build. You enforce the r
 ## Step 0 — Load the rules for this project
 
 0. `Read` the project instruction files (`CLAUDE.md`, `AGENTS.md`, `.cursorrules`…). Their rules are audited like policy keys and override the defaults below; never "fix" code that follows a documented project rule.
-1. `Read` `.claude/lovable/policy.json`. Missing → assume `marketing` defaults for a site with no data views, `backoffice` defaults when the code has record lists/forms, and report that the policy file is missing (suggest `/lovable-adopt`).
-2. `Read` `.claude/lovable/conventions.md` if it exists — note the canonical list/form and shared primitives.
+1. `Read` `.lovable/policy.json`. Missing → assume `marketing` defaults for a site with no data views, `backoffice` defaults when the code has record lists/forms, and report that the policy file is missing (suggest `/lovable-adopt`).
+2. `Read` `.lovable/conventions.md` if it exists — note the canonical list/form and shared primitives.
 3. Severity by profile:
 
 | Section | marketing | backoffice |
@@ -92,7 +92,7 @@ Grep for `variant="outline"` paired with `text-white` or hero-bg parents. shadcn
 
 ### 8. Data patterns (pattern skills)
 
-For each kind of screen in scope, `Read` the matching skill at `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` and run its **Audit** table (greps + severities): lists → `crud-list`; forms → `crud-form`; documents with lines → `document-lines`; bulk actions → `bulk-actions`; filters → `filters`; dashboards/reports/charts → `dashboard-charts`; tabbed cards/history → `master-detail-tabs`; export/import/print → `export-print`. A skill's BLOCKER is a BLOCKER here unless the project's instruction files or decision log say otherwise.
+For each kind of screen in scope, `Read` the matching skill at `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` and run its **Audit** table (greps + severities): lists → `crud-list`; forms → `crud-form`; documents with lines → `document-lines`; bulk actions → `bulk-actions`; filters → `filters`; dashboards/reports/charts → `dashboard-charts`; tabbed cards/history → `master-detail-tabs`; export/import/print → `export-print`; e2e tests (new features, bug fixes) → `e2e-crud`. A skill's BLOCKER is a BLOCKER here unless the project's instruction files or decision log say otherwise.
 
 Also, regardless of skills:
 - **Client-component correctness** (Next.js App Router): any file using hooks/handlers/browser APIs starts with `"use client"`. Flag `react-router-dom`, `BrowserRouter`, `index.html` or `src/main.tsx` — Vite artifacts that must not exist.
