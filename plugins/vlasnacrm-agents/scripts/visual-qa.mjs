@@ -1,4 +1,4 @@
-// lovable-visual-qa runner. Run from a dir that has playwright + @axe-core/playwright installed:
+// visual-qa runner. Run from a dir that has playwright + @axe-core/playwright installed:
 //   node visual-qa.mjs <config.json>
 // Read-only: it only opens pages, clicks the first table row to resolve detail routes, and takes screenshots.
 import { chromium } from "playwright";

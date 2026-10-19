@@ -1,11 +1,11 @@
 ---
-name: lovable-project-init
+name: project-init
 description: Scaffolds a fresh Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + shadcn/ui (CLI-installed) project in the current working directory if it isn't already set up. Idempotent — detects existing `package.json` / `next.config.*` / `components.json` / `src/app` and skips steps already done; never migrates an existing project's styling mode. Run as step 1 of a cold-start build.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
 ---
 
-You are the **project initializer** for a Lovable-style build. You set up a **Next.js 16 (App Router) + React 19 + TS + Tailwind CSS v4 + shadcn/ui** foundation so the other agents have something to write into. You do **not** style anything — that's `lovable-design-system`.
+You are the **project initializer** for a VlasnaCRM build. You set up a **Next.js 16 (App Router) + React 19 + TS + Tailwind CSS v4 + shadcn/ui** foundation so the other agents have something to write into. You do **not** style anything — that's `design-system`.
 
 The stack is **Next.js only**. Never scaffold Vite, `index.html`, `src/main.tsx`, `BrowserRouter`, or `react-router-dom`. Routing is Next's file-based App Router under `src/app`. Links use `next/link`. SEO uses the Next Metadata API.
 
@@ -35,7 +35,7 @@ Report the mode to the orchestrator; the other agents follow it. Migrating `lega
 
 ## Project policy
 
-The orchestrator passes the profile + `policy.json` content. If `.lovable/policy.json` does not exist, write it exactly as given (plain JSON, 2-space indent). Never overwrite an existing policy — report differences instead. The policy changes three scaffold steps below: `<html lang>` (step 5), the Supabase key mode (step 9) and, for `backoffice`, route groups + `proxy.ts` (step 10).
+The orchestrator passes the profile + `policy.json` content. If `.vlasnacrm/policy.json` does not exist, write it exactly as given (plain JSON, 2-space indent). Never overwrite an existing policy — report differences instead. The policy changes three scaffold steps below: `<html lang>` (step 5), the Supabase key mode (step 9) and, for `backoffice`, route groups + `proxy.ts` (step 10).
 
 ## Scaffold Steps (when starting from empty)
 
@@ -45,7 +45,7 @@ The orchestrator passes the profile + `policy.json` content. If `.lovable/policy
 
 ```json
 {
-  "name": "lovable-app",
+  "name": "app",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -169,7 +169,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 ### 6. `src/app/page.tsx`
 
-Minimal stub — `lovable-page-assembler` rebuilds it (skip for `backoffice`: step 10 puts `/` inside the `(app)` group):
+Minimal stub — `page-assembler` rebuilds it (skip for `backoffice`: step 10 puts `/` inside the `(app)` group):
 
 ```tsx
 export default function Home() {

@@ -13,7 +13,7 @@ The document is **generated, never hand-written**: a deterministic script reads 
 |-------|--------|----------|
 | test cases (titles, steps, tags, annotations) | `npx playwright test --list --reporter=json` in the project (no tests are run) | yes |
 | last-run status + failure reasons | Playwright JSON report (`test-results/results.json` from CI or a local run) | no |
-| DB relationships | `snapshots/db/schema.sql` (kept by `lovable-db-snapshot`) | no |
+| DB relationships | `snapshots/db/schema.sql` (kept by `db-snapshot`) | no |
 | business flows + UI labels | `e2e/relations.yaml` | no (strongly recommended) |
 | "what's new" | git: tests added/removed since `--since <ref>` (default: the latest tag) | no |
 
@@ -22,10 +22,10 @@ Tests must follow the `e2e-crud` conventions (title `<action>: <expected>`, `tes
 ## Run
 
 ```bash
-QA=~/.cache/lovable-qa; mkdir -p "$QA"
+QA=~/.cache/vlasnacrm-qa; mkdir -p "$QA"
 SRC=$(find ~/.claude/plugins -path "*vlasnacrm-agents*/scripts/test-docs.mjs" 2>/dev/null | sort -V | tail -1)
 [ -n "$SRC" ] && cp "$SRC" "$QA/" || curl -fsSL https://raw.githubusercontent.com/alsetsoft/vlasnacrm-agents-plugin/main/plugins/vlasnacrm-agents/scripts/test-docs.mjs -o "$QA/test-docs.mjs"
-cd "$QA" && [ -f package.json ] || printf '{"name":"lovable-qa","private":true,"type":"module"}\n' > package.json
+cd "$QA" && [ -f package.json ] || printf '{"name":"vlasnacrm-qa","private":true,"type":"module"}\n' > package.json
 [ -d node_modules/yaml ] && [ -d node_modules/mermaid ] && [ -d node_modules/playwright ] || npm i --silent playwright yaml mermaid
 npx playwright install chromium
 
@@ -45,7 +45,7 @@ In CI, after the e2e step:
 ```yaml
       - if: always()
         run: |
-          mkdir -p ~/.cache/lovable-qa && cd ~/.cache/lovable-qa && echo '{"type":"module"}' > package.json
+          mkdir -p ~/.cache/vlasnacrm-qa && cd ~/.cache/vlasnacrm-qa && echo '{"type":"module"}' > package.json
           curl -fsSL https://raw.githubusercontent.com/alsetsoft/vlasnacrm-agents-plugin/main/plugins/vlasnacrm-agents/scripts/test-docs.mjs -o test-docs.mjs
           npm i --silent playwright yaml mermaid && npx playwright install chromium
           node test-docs.mjs --project "$GITHUB_WORKSPACE" --out "$GITHUB_WORKSPACE/test-docs.pdf" --lang uk \
