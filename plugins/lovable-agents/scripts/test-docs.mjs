@@ -81,7 +81,9 @@ try {
 } catch (e) {
   throw new Error("`npx playwright test --list --reporter=json` failed in " + project + ":\n" + (e.stderr || e.message));
 }
-let specs = loadReport(listed);
+// setup/teardown projects (auth.setup.ts, global-setup) are plumbing, not test cases
+const isPlumbing = (s) => /(^|[\\/])[^\\/]*\.(setup|teardown)\.[cm]?[jt]sx?$|global-(setup|teardown)/i.test(s.file);
+let specs = loadReport(listed).filter((s) => !isPlumbing(s));
 // one entry per spec (several projects/browsers list the same spec)
 specs = [...new Map(specs.map((s) => [`${s.file}|${s.describe.join(">")}|${s.title}`, s])).values()];
 
