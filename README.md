@@ -31,12 +31,10 @@ For the whole team on a project, commit to its `.claude/settings.json`:
 | add a screen / entity | `/lovable add a suppliers list and form` |
 | fix UI or a bug | `/lovable-fix archived records still appear in pickers` — fixed app-wide, `@regression` e2e test first |
 | make a client/QA remark a rule | `/lovable-lesson after saving, stay on the record` |
-| one task by a recipe | `/lovable-agents:<skill> <task>`, e.g. `/lovable-agents:document-lines purchase order with lines` |
-| PDF of test cases for QA | `/lovable-agents:test-docs` |
 
-Your `CLAUDE.md` / `AGENTS.md` always win over `.lovable/policy.json`, which wins over the agents' defaults. Commit `.lovable/` with the code.
+Describe **what** you want — not which rules to follow. Your `CLAUDE.md` / `AGENTS.md` always win over `.lovable/policy.json`, which wins over the agents' defaults. Commit `.lovable/` with the code.
 
-**Skills:** `crud-list`, `crud-form`, `document-lines`, `bulk-actions`, `filters`, `dashboard-charts`, `master-detail-tabs`, `export-print`, `e2e-crud`, `test-docs`.
+**Skills are loaded by the agents, not by you.** The orchestrator maps each task to skills (an order form → `crud-form` + `document-lines`), builders read them before writing code, the reviewer runs their audit tables, the e2e writer uses `e2e-crud` and regenerates the testers' PDF (`test-docs`) whenever test cases change. Skills: `crud-list`, `crud-form`, `document-lines`, `bulk-actions`, `filters`, `dashboard-charts`, `master-detail-tabs`, `export-print`, `e2e-crud`, `test-docs`. Calling one by hand (`/lovable-agents:<skill> <task>`) is only for one-off tasks outside the pipeline.
 
 **Tests:** e2e and visual QA run only against a test environment (local stack or a separate test DB), never production. For logged-in screens set `E2E_EMAIL` / `E2E_PASSWORD` (e2e) and `LOVABLE_QA_EMAIL` / `LOVABLE_QA_PASSWORD` (visual QA).
 
