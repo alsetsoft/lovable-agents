@@ -1,24 +1,26 @@
-# lovable-agents
+# vlasnacrm-agents
 
 Claude Code plugin that builds Next.js 16 + React 19 + Tailwind v4 + shadcn + Supabase apps — landing pages (`marketing`) and CRM/ERP back-offices (`backoffice`) — and keeps every screen consistent, tested and reviewed.
 
+> **2.2 renames the plugin** `lovable-agents` → `vlasnacrm-agents` (repo `alsetsoft/vlasnacrm-agents-plugin`). Migrate once: `/plugin uninstall lovable-agents@alsetsoft`, `/plugin marketplace remove alsetsoft`, then *Install* below; in project `.claude/settings.json` replace `lovable-agents@alsetsoft` with `vlasnacrm-agents@alsetsoft`. Skill calls become `/vlasnacrm-agents:<skill>`; commands (`/lovable…`) and agent names are unchanged.
+>
 > **2.0 is breaking:** project files moved from `.claude/lovable/` to `.lovable/`. Agents move it on the next write, or run `git mv .claude/lovable .lovable`.
 
 ## Install
 
 ```text
-/plugin marketplace add alsetsoft/lovable-agents
-/plugin install lovable-agents@alsetsoft
+/plugin marketplace add alsetsoft/vlasnacrm-agents-plugin
+/plugin install vlasnacrm-agents@alsetsoft
 ```
 
-Update: `/plugin marketplace update alsetsoft` → `/plugin update lovable-agents@alsetsoft` → `/reload-plugins`.
+Update: `/plugin marketplace update alsetsoft` → `/plugin update vlasnacrm-agents@alsetsoft` → `/reload-plugins`.
 
 For the whole team on a project, commit to its `.claude/settings.json`:
 
 ```json
 {
-  "extraKnownMarketplaces": { "alsetsoft": { "source": { "source": "github", "repo": "alsetsoft/lovable-agents" } } },
-  "enabledPlugins": { "lovable-agents@alsetsoft": true }
+  "extraKnownMarketplaces": { "alsetsoft": { "source": { "source": "github", "repo": "alsetsoft/vlasnacrm-agents-plugin" } } },
+  "enabledPlugins": { "vlasnacrm-agents@alsetsoft": true }
 }
 ```
 
@@ -34,7 +36,7 @@ For the whole team on a project, commit to its `.claude/settings.json`:
 
 Describe **what** you want — not which rules to follow. Your `CLAUDE.md` / `AGENTS.md` always win over `.lovable/policy.json`, which wins over the agents' defaults. Commit `.lovable/` with the code.
 
-**Skills are loaded by the agents, not by you.** The orchestrator maps each task to skills (an order form → `crud-form` + `document-lines`), builders read them before writing code, the reviewer runs their audit tables, the e2e writer uses `e2e-crud` and regenerates the testers' PDF (`test-docs`) whenever test cases change. Skills: `crud-list`, `crud-form`, `document-lines`, `bulk-actions`, `filters`, `dashboard-charts`, `master-detail-tabs`, `export-print`, `e2e-crud`, `test-docs`. Calling one by hand (`/lovable-agents:<skill> <task>`) is only for one-off tasks outside the pipeline.
+**Skills are loaded by the agents, not by you.** The orchestrator maps each task to skills (an order form → `crud-form` + `document-lines`), builders read them before writing code, the reviewer runs their audit tables, the e2e writer uses `e2e-crud` and regenerates the testers' PDF (`test-docs`) whenever test cases change. Skills: `crud-list`, `crud-form`, `document-lines`, `bulk-actions`, `filters`, `dashboard-charts`, `master-detail-tabs`, `export-print`, `e2e-crud`, `test-docs`. Calling one by hand (`/vlasnacrm-agents:<skill> <task>`) is only for one-off tasks outside the pipeline.
 
 **Tests:** e2e and visual QA run only against a test environment (local stack or a separate test DB), never production. For logged-in screens set `E2E_EMAIL` / `E2E_PASSWORD` (e2e) and `LOVABLE_QA_EMAIL` / `LOVABLE_QA_PASSWORD` (visual QA).
 
@@ -42,7 +44,7 @@ Describe **what** you want — not which rules to follow. Your `CLAUDE.md` / `AG
 
 ```
 .claude-plugin/marketplace.json          marketplace "alsetsoft"
-plugins/lovable-agents/
+plugins/vlasnacrm-agents/
   .claude-plugin/plugin.json             name + version
   agents/     orchestrator → project-init, design-system, component-builder, page-assembler,
               db-snapshot, design-reviewer, e2e-writer, visual-qa
@@ -55,11 +57,11 @@ Agents read rules from skills by name; change a data-screen rule in its skill, n
 
 ## Contribute
 
-1. Branch off `main`, edit under `plugins/lovable-agents/`.
+1. Branch off `main`, edit under `plugins/vlasnacrm-agents/`.
 2. **Bump `version`** in `plugin.json` (SemVer) — without it `/plugin update` keeps serving the old version.
 3. Check locally:
    ```bash
-   claude plugin validate ./plugins/lovable-agents
-   claude --plugin-dir ./plugins/lovable-agents   # try it without installing
+   claude plugin validate ./plugins/vlasnacrm-agents
+   claude --plugin-dir ./plugins/vlasnacrm-agents   # try it without installing
    ```
 4. Open a PR to `main`; merge after one approval from another team member.

@@ -10,7 +10,7 @@ You are the **e2e test writer** for a Lovable-style build. Your tests are the si
 ## Step 0 — Load the rules
 
 1. Project instruction files (`CLAUDE.md`, `AGENTS.md`…), `.lovable/policy.json` (`locale`, `timezone`, `forms.*`, `lists.*`, `e2e.*`), `.lovable/conventions.md` (canon, patterns, decision log).
-2. `Read` `${CLAUDE_PLUGIN_ROOT}/skills/e2e-crud/SKILL.md` — setup, safety, naming, coverage table, regression rules, CI (fallback: `find ~/.claude/plugins -path "*lovable-agents*/skills/e2e-crud/SKILL.md" | sort -V | tail -1`). Also the pattern skill of the feature under test (`crud-form`, `document-lines`, `bulk-actions`…) — its rules are what you assert.
+2. `Read` `${CLAUDE_PLUGIN_ROOT}/skills/e2e-crud/SKILL.md` — setup, safety, naming, coverage table, regression rules, CI (fallback: `find ~/.claude/plugins -path "*vlasnacrm-agents*/skills/e2e-crud/SKILL.md" | sort -V | tail -1`). Also the pattern skill of the feature under test (`crud-form`, `document-lines`, `bulk-actions`…) — its rules are what you assert.
 3. The feature's code (routes, form, list, data hooks) and `snapshots/db/SCHEMA.md` for tables and FKs. Use the **visible UI names** in steps and locators.
 
 ## Mode A — new entity / feature

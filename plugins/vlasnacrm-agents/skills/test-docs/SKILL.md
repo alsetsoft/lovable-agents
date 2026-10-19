@@ -23,8 +23,8 @@ Tests must follow the `e2e-crud` conventions (title `<action>: <expected>`, `tes
 
 ```bash
 QA=~/.cache/lovable-qa; mkdir -p "$QA"
-SRC=$(find ~/.claude/plugins -path "*lovable-agents*/scripts/test-docs.mjs" 2>/dev/null | sort -V | tail -1)
-[ -n "$SRC" ] && cp "$SRC" "$QA/" || curl -fsSL https://raw.githubusercontent.com/alsetsoft/lovable-agents/main/plugins/lovable-agents/scripts/test-docs.mjs -o "$QA/test-docs.mjs"
+SRC=$(find ~/.claude/plugins -path "*vlasnacrm-agents*/scripts/test-docs.mjs" 2>/dev/null | sort -V | tail -1)
+[ -n "$SRC" ] && cp "$SRC" "$QA/" || curl -fsSL https://raw.githubusercontent.com/alsetsoft/vlasnacrm-agents-plugin/main/plugins/vlasnacrm-agents/scripts/test-docs.mjs -o "$QA/test-docs.mjs"
 cd "$QA" && [ -f package.json ] || printf '{"name":"lovable-qa","private":true,"type":"module"}\n' > package.json
 [ -d node_modules/yaml ] && [ -d node_modules/mermaid ] && [ -d node_modules/playwright ] || npm i --silent playwright yaml mermaid
 npx playwright install chromium
@@ -46,7 +46,7 @@ In CI, after the e2e step:
       - if: always()
         run: |
           mkdir -p ~/.cache/lovable-qa && cd ~/.cache/lovable-qa && echo '{"type":"module"}' > package.json
-          curl -fsSL https://raw.githubusercontent.com/alsetsoft/lovable-agents/main/plugins/lovable-agents/scripts/test-docs.mjs -o test-docs.mjs
+          curl -fsSL https://raw.githubusercontent.com/alsetsoft/vlasnacrm-agents-plugin/main/plugins/vlasnacrm-agents/scripts/test-docs.mjs -o test-docs.mjs
           npm i --silent playwright yaml mermaid && npx playwright install chromium
           node test-docs.mjs --project "$GITHUB_WORKSPACE" --out "$GITHUB_WORKSPACE/test-docs.pdf" --lang uk \
             --results "$GITHUB_WORKSPACE/test-results/results.json" --schema "$GITHUB_WORKSPACE/snapshots/db/schema.sql" \

@@ -37,8 +37,8 @@ The runner ships with the plugin at `scripts/visual-qa.mjs`. Install it with its
 
 ```bash
 QA=~/.cache/lovable-qa; mkdir -p "$QA"
-SRC=$(find ~/.claude/plugins -path "*lovable-agents*/scripts/visual-qa.mjs" 2>/dev/null | sort -V | tail -1)
-[ -n "$SRC" ] && cp "$SRC" "$QA/visual-qa.mjs" || curl -fsSL https://raw.githubusercontent.com/alsetsoft/lovable-agents/main/plugins/lovable-agents/scripts/visual-qa.mjs -o "$QA/visual-qa.mjs"
+SRC=$(find ~/.claude/plugins -path "*vlasnacrm-agents*/scripts/visual-qa.mjs" 2>/dev/null | sort -V | tail -1)
+[ -n "$SRC" ] && cp "$SRC" "$QA/visual-qa.mjs" || curl -fsSL https://raw.githubusercontent.com/alsetsoft/vlasnacrm-agents-plugin/main/plugins/vlasnacrm-agents/scripts/visual-qa.mjs -o "$QA/visual-qa.mjs"
 cd "$QA" && [ -f package.json ] || printf '{"name":"lovable-qa","private":true,"type":"module"}\n' > package.json
 [ -d node_modules/playwright ] || npm i --silent playwright @axe-core/playwright
 npx playwright install chromium   # no-op when already installed; the runner falls back to system Chrome

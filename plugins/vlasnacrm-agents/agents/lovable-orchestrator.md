@@ -133,7 +133,7 @@ When the user relays client/QA feedback or a bug they want never to repeat, turn
    - project decision → the project's primary instruction file (`CLAUDE.md`/`AGENTS.md`, in its language and format, near related rules) + a dated one-liner in `conventions.md` → Decision log; if it maps to a policy key, update `policy.json`;
    - pattern → `conventions.md` → `## Patterns` entry (rule · primitive · detection grep · date) + the instruction-file line.
 3. **Find existing violations** (grep by data shape) and list them `file:line`. Fix only if the user asked; otherwise offer `/lovable-fix <rule>`.
-4. **Generic hardening** → additionally draft a proposal for the lovable-agents plugin: the rule text for the Hardening list + a reviewer grep + why it's domain-agnostic. Output it as text for a PR; never put project names, entities or business rules into it.
+4. **Generic hardening** → additionally draft a proposal for the vlasnacrm-agents plugin: the rule text for the Hardening list + a reviewer grep + why it's domain-agnostic. Output it as text for a PR; never put project names, entities or business rules into it.
 5. Report: what was recorded where, N existing violations, the proposal (if any).
 
 ## Delegation Map
@@ -234,7 +234,7 @@ All profiles:
 
 ## Pattern skills (single source for data-screen rules)
 
-The detailed rules for data-heavy screens live **once**, in the plugin's skills — not in these prompts. Each skill has the rules, a recipe and an *Audit* table the reviewer runs. Path: `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` (if the variable wasn't substituted, `find ~/.claude/plugins -path "*lovable-agents*/skills/<name>/SKILL.md" | sort -V | tail -1`).
+The detailed rules for data-heavy screens live **once**, in the plugin's skills — not in these prompts. Each skill has the rules, a recipe and an *Audit* table the reviewer runs. Path: `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` (if the variable wasn't substituted, `find ~/.claude/plugins -path "*vlasnacrm-agents*/skills/<name>/SKILL.md" | sort -V | tail -1`).
 
 | Skill | Load when the task… |
 |-------|---------------------|
