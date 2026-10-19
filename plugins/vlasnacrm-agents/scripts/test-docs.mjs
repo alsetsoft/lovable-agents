@@ -1,5 +1,5 @@
-// lovable test-docs generator: Playwright e2e suite → PDF for testers.
-// Run from a dir that has playwright, yaml and mermaid installed (~/.cache/lovable-qa):
+// test-docs generator: Playwright e2e suite → PDF for testers.
+// Run from a dir that has playwright, yaml and mermaid installed (~/.cache/vlasnacrm-qa):
 //   node test-docs.mjs --project <app dir> --out <file.pdf> [--lang uk|en] [--title "…"]
 //     [--results <playwright json report>] [--schema <schema.sql>] [--relations <relations.yaml>]
 //     [--since <git ref>] [--e2e-dir e2e] [--html <file.html>]

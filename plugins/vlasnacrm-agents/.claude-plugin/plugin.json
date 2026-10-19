@@ -1,11 +1,11 @@
 {
   "name": "vlasnacrm-agents",
-  "description": "VlasnaCRM agents — Lovable-style Next.js + TS + Tailwind + shadcn app builder (marketing sites and CRM/ERP back-offices). Bundles the lovable orchestrator and its sub-agents plus the /lovable command.",
-  "version": "2.2.0",
+  "description": "VlasnaCRM agents — Next.js + TS + Tailwind + shadcn app builder (marketing sites and CRM/ERP back-offices). Bundles the orchestrator and its sub-agents plus the /vlasnacrm command.",
+  "version": "2.3.0",
   "author": {
     "name": "alsetsoft"
   },
   "homepage": "https://github.com/alsetsoft/vlasnacrm-agents-plugin",
   "repository": "https://github.com/alsetsoft/vlasnacrm-agents-plugin",
-  "keywords": ["lovable", "nextjs", "tailwind", "shadcn", "agents", "design"]
+  "keywords": ["vlasnacrm", "nextjs", "tailwind", "shadcn", "agents", "design"]
 }

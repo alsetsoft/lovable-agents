@@ -2,10 +2,6 @@
 
 Claude Code plugin that builds Next.js 16 + React 19 + Tailwind v4 + shadcn + Supabase apps — landing pages (`marketing`) and CRM/ERP back-offices (`backoffice`) — and keeps every screen consistent, tested and reviewed.
 
-> **2.2 renames the plugin** `lovable-agents` → `vlasnacrm-agents` (repo `alsetsoft/vlasnacrm-agents-plugin`). Migrate once: `/plugin uninstall lovable-agents@alsetsoft`, `/plugin marketplace remove alsetsoft`, then *Install* below; in project `.claude/settings.json` replace `lovable-agents@alsetsoft` with `vlasnacrm-agents@alsetsoft`. Skill calls become `/vlasnacrm-agents:<skill>`; commands (`/lovable…`) and agent names are unchanged.
->
-> **2.0 is breaking:** project files moved from `.claude/lovable/` to `.lovable/`. Agents move it on the next write, or run `git mv .claude/lovable .lovable`.
-
 ## Install
 
 ```text
@@ -28,17 +24,17 @@ For the whole team on a project, commit to its `.claude/settings.json`:
 
 | You want to… | Run |
 |--------------|-----|
-| build a new app | `/lovable backoffice CRM for a furniture store: clients, orders, payments` |
-| connect an existing project (once) | `/lovable-adopt` — writes `.lovable/policy.json` + `conventions.md` from your CLAUDE.md and code; review and commit them |
-| add a screen / entity | `/lovable add a suppliers list and form` |
-| fix UI or a bug | `/lovable-fix archived records still appear in pickers` — fixed app-wide, `@regression` e2e test first |
-| make a client/QA remark a rule | `/lovable-lesson after saving, stay on the record` |
+| build a new app | `/vlasnacrm backoffice CRM for a furniture store: clients, orders, payments` |
+| connect an existing project (once) | `/vlasnacrm-adopt` — writes `.vlasnacrm/policy.json` + `conventions.md` from your CLAUDE.md and code; review and commit them |
+| add a screen / entity | `/vlasnacrm add a suppliers list and form` |
+| fix UI or a bug | `/vlasnacrm-fix archived records still appear in pickers` — fixed app-wide, `@regression` e2e test first |
+| make a client/QA remark a rule | `/vlasnacrm-lesson after saving, stay on the record` |
 
-Describe **what** you want — not which rules to follow. Your `CLAUDE.md` / `AGENTS.md` always win over `.lovable/policy.json`, which wins over the agents' defaults. Commit `.lovable/` with the code.
+Describe **what** you want — not which rules to follow. Your `CLAUDE.md` / `AGENTS.md` always win over `.vlasnacrm/policy.json`, which wins over the agents' defaults. Commit `.vlasnacrm/` with the code.
 
 **Skills are loaded by the agents, not by you.** The orchestrator maps each task to skills (an order form → `crud-form` + `document-lines`), builders read them before writing code, the reviewer runs their audit tables, the e2e writer uses `e2e-crud` and regenerates the testers' PDF (`test-docs`) whenever test cases change. Skills: `crud-list`, `crud-form`, `document-lines`, `bulk-actions`, `filters`, `dashboard-charts`, `master-detail-tabs`, `export-print`, `e2e-crud`, `test-docs`. Calling one by hand (`/vlasnacrm-agents:<skill> <task>`) is only for one-off tasks outside the pipeline.
 
-**Tests:** e2e and visual QA run only against a test environment (local stack or a separate test DB), never production. For logged-in screens set `E2E_EMAIL` / `E2E_PASSWORD` (e2e) and `LOVABLE_QA_EMAIL` / `LOVABLE_QA_PASSWORD` (visual QA).
+**Tests:** e2e and visual QA run only against a test environment (local stack or a separate test DB), never production. For logged-in screens set `E2E_EMAIL` / `E2E_PASSWORD` (e2e) and `VLASNACRM_QA_EMAIL` / `VLASNACRM_QA_PASSWORD` (visual QA).
 
 ## Structure
 
@@ -48,7 +44,7 @@ plugins/vlasnacrm-agents/
   .claude-plugin/plugin.json             name + version
   agents/     orchestrator → project-init, design-system, component-builder, page-assembler,
               db-snapshot, design-reviewer, e2e-writer, visual-qa
-  commands/   /lovable, /lovable-adopt, /lovable-fix, /lovable-lesson
+  commands/   /vlasnacrm, /vlasnacrm-adopt, /vlasnacrm-fix, /vlasnacrm-lesson
   skills/     <name>/SKILL.md — rules for data screens and tests (+ an Audit table for the reviewer)
   scripts/    visual-qa.mjs, test-docs.mjs
 ```
