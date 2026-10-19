@@ -70,7 +70,7 @@ They live in `.lovable/` at the project root — **not** under `.claude/`: Claud
   "data": { "supabaseKeys": "env" },  // "inline" — public URL + publishable key inlined in the client file
   "seo": { "enabled": false },        // true
   "qa": { "enabled": true, "blocking": false },  // visual QA; viewports/dark/loginPath optional (see lovable-visual-qa)
-  "e2e": { "enabled": true, "required": false }  // e2e-writer after the reviewer; required = reviewer blocks features without tests
+  "e2e": { "enabled": true, "required": false, "docs": true }  // e2e-writer after the reviewer; required = reviewer blocks features without tests; docs = regenerate the testers' PDF when test cases change
 }
 ```
 
@@ -150,7 +150,7 @@ Use the `Agent` tool to dispatch. Run independent agents **in parallel** (single
 | 3b | `lovable-page-assembler` | Assemble pages, routes, data fetching, and (marketing) SEO. |
 | 3c | `lovable-db-snapshot` | Refresh `snapshots/db/` (schema.sql + SCHEMA.md) whenever this build touched the database schema. |
 | 4 | `lovable-design-reviewer` | Audit against the profile checklist, policy, hardening rules and the canon. Fix what it finds. |
-| 4b | `lovable-e2e-writer` | Playwright tests for the feature: CRUD + relationships (titles/steps = test cases in the UI language), updates `e2e/relations.yaml`, runs them on the test environment. For a bug fix: the regression test, written first. |
+| 4b | `lovable-e2e-writer` | Playwright tests for the feature: CRUD + relationships (titles/steps = test cases in the UI language), updates `e2e/relations.yaml`, runs them on the test environment. For a bug fix: the regression test, written first. Then regenerates the testers' PDF (`test-docs`) when test cases changed and `e2e.docs` isn't false. |
 | 5 | `lovable-visual-qa` | Open the touched routes in a headless browser: screenshots (laptop/desktop/tablet), no-scroll forms, overflow, console/HTTP errors, axe a11y, graded look. Report only. |
 
 Step 3a and 3b can run in parallel once the design system exists. Step 2 must complete before step 3. Step 3c runs before step 4 whenever the schema changed. Step 4b runs after step 4 for every new entity/feature (skip when `e2e.enabled` is false) and **always** for a bug fix (see *Bug fixes*); failing tests that reveal an app bug go back to the builder like reviewer findings. Step 5 runs after step 4 for any change that touches UI (skip when `qa.enabled` is false): pass it the routes the change touched. Its BLOCKERs go back to `lovable-component-builder` (or the agent that owns the file) and the QA re-runs on those routes — at most 2 rounds; with `qa.blocking: false` show its findings to the user instead of looping. Never claim visual quality you didn't check: if QA was skipped (no tooling/credentials), say so in the summary.
@@ -249,7 +249,7 @@ The detailed rules for data-heavy screens live **once**, in the plugin's skills 
 | `e2e-crud` | writes e2e tests (feature CRUD/relations, bug-fix regressions) or sets up Playwright/CI |
 | `test-docs` | builds the testers' PDF from the e2e suite (what's new, relationship map, test cases, regressions, gaps) |
 
-In every delegation that touches data UI, **name the skills the task needs** ("load `crud-list`, `filters`") — builders `Read` them before writing code, the reviewer runs their *Audit* tables. The invariants in short: shared data table; loading/empty/error states; pagination, sort and search on the server; create/edit on routes, never in modals; navigation after save/create per `forms.*`; archive rather than delete; one transaction per multi-row write. The project's policy, canon and instruction files parametrize and override the skills.
+You choose the skills, not the developer: users describe *what* they want and never have to name a skill — map the task to this table yourself (a screen often needs several: an order form = `crud-form` + `document-lines`; a list with a period filter = `crud-list` + `filters`). If the user did name a skill, add it to your selection. In every delegation that touches data UI, **name the skills the task needs** ("load `crud-list`, `filters`") — builders `Read` them before writing code, the reviewer runs their *Audit* tables. The invariants in short: shared data table; loading/empty/error states; pagination, sort and search on the server; create/edit on routes, never in modals; navigation after save/create per `forms.*`; archive rather than delete; one transaction per multi-row write. The project's policy, canon and instruction files parametrize and override the skills.
 
 Data layer = **Supabase (`@supabase/supabase-js`) + TanStack Query (`@tanstack/react-query`)**. The Supabase client lives in `src/integrations/supabase/client.ts`.
 
@@ -284,7 +284,7 @@ Every bug fix — reported by QA, the client, a user or found by an agent — sh
 3. The regression test passes, plus the module's other tests.
 4. Title = the correct behaviour in the UI language, tag `@regression`, annotation `bug: "<ticket>: <what was wrong>"`.
 
-A fix without its regression test is not done; the only exception is a bug that can't be observed end-to-end — then the closest visible-symptom check and an explicit note in the summary. After test cases change, offer to regenerate the testers' document (`test-docs`).
+A fix without its regression test is not done; the only exception is a bug that can't be observed end-to-end — then the closest visible-symptom check and an explicit note in the summary. After test cases change, the e2e-writer regenerates the testers' document (`test-docs`) itself; mention its path in the summary.
 
 ## When NOT to Build
 

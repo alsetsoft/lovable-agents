@@ -114,7 +114,7 @@ Routes for create/edit (`/<entity>/new`, `/<entity>/[id]` — never modals), `re
 - **Single H1.** Other sections use H2/H3.
 - **Supabase keys** only in `src/integrations/supabase/client.ts`, per `data.supabaseKeys` (`env` or `inline`); never a service-role key in client code.
 - **SEO via the Metadata API** when `seo.enabled`: set `title`, `description`, `openGraph`, `twitter`, and `alternates.canonical` on the root `layout.tsx` and override per route as needed. Backoffice: titles only. There is no `index.html`.
-- **Data screens follow the pattern skills** (`crud-list`, `crud-form`, …) — client-side TanStack Query + Supabase, database-level pagination, create/edit on routes, navigation after save per policy.
+- **Data screens follow the pattern skills** — before wiring a list, form, document with lines, filter, dashboard, tabbed card or export, `Read` the matching skill(s) at `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` (the orchestrator names them; if it didn't, pick them from the orchestrator's *Pattern skills* table yourself; fallback path: `find ~/.claude/plugins -path "*lovable-agents*/skills/<name>/SKILL.md" | sort -V | tail -1`) — client-side TanStack Query + Supabase, database-level pagination, create/edit on routes, navigation after save per policy.
 - **Mirror the canon** from `conventions.md` for every new list/form route.
 - **Patterns registry**: wiring a list/filter/form that touches a pattern in `conventions.md` → use that pattern's primitive (picker, archived filter, formatter…). A behaviour change you make in one route's data hook (e.g. how archived rows are filtered or ordered) is applied to every route with the same data shape in the same change.
 

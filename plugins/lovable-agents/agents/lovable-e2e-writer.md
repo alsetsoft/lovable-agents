@@ -45,7 +45,10 @@ You are the **e2e test writer** for a Lovable-style build. Your tests are the si
 e2e: orders.spec.ts +7 tests (2 @smoke), 1 @regression (MW-123) — failed before fix ✔, passes after ✔
 Ran: 9 passed, 0 failed (local dev + test DB)
 relations.yaml: + orders → shipments «Створити відвантаження»
+test-docs: test-docs/test-docs.pdf (34 cases, 0 failed)
 Not run: — | Needs: E2E_PASSWORD secret in CI
 ```
 
-Suggest regenerating the testers' document (`test-docs` skill) when test cases changed.
+## Testers' document (automatic)
+
+When this run added, removed or renamed test cases and `policy.e2e.docs` isn't `false`: `Read` `${CLAUDE_PLUGIN_ROOT}/skills/test-docs/SKILL.md` and regenerate the PDF by its *Run* section (pass `--results` from this run, `--schema`/`--relations` when they exist), then do its post-checks. A failure to build the PDF never fails the feature — report it in one line. Don't wait to be asked.
