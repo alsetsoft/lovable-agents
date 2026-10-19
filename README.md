@@ -4,6 +4,20 @@ Shared [Claude Code](https://docs.claude.com/en/docs/claude-code) agents for bui
 
 This repo is a **Claude Code plugin marketplace**. Install it once in any project (or globally) and every project gets the same agents, commands and pattern skills. Edit an agent here, push, and all projects pull the update — no more copy-pasting between repos.
 
+## What's new in 2.0 (breaking)
+
+**Breaking:** project files moved from `.claude/lovable/` to **`.lovable/`** at the project root (`policy.json`, `conventions.md`, `qa/`, `qa.local.json`). Claude Code treats everything under `.claude/` as sensitive — each write needed a permission prompt and headless/CI runs failed. Agents read a legacy `.claude/lovable/` and `git mv` it to `.lovable/` on the next write; to migrate by hand: `git mv .claude/lovable .lovable` and update `.gitignore` entries (`.lovable/qa/`, `.lovable/qa.local.json`).
+
+New in 2.0:
+- **E2E tests** — `lovable-e2e-writer` writes Playwright tests for every feature (CRUD + relationships) and a **regression test, written first, for every bug fix**; `e2e-crud` skill (safe test env, naming that reads as test cases, CI on the GitHub free plan).
+- **Testers' PDF** — `test-docs` skill + `scripts/test-docs.mjs`: what's new, entity & relationship map, flows, test cases with steps/status, regressions, gaps (uk/en).
+- **Reliable orchestration** — agents are dispatched in the foreground; the orchestrator never returns mid-pipeline (headless/CI runs no longer get cut off).
+- Since 1.x: Tailwind v4 / shadcn CLI / React 19 / Next 16 stack, consistency rule + `/lovable-fix`, `/lovable-adopt`, `/lovable-lesson`, `lovable-visual-qa`, keyboard & a11y, 8 pattern skills.
+
+Verified end to end on a lab project (local Supabase): full `/lovable` build, `/lovable-fix`, `/lovable-lesson`, `/lovable-adopt` on a real ERP repo copy, and the testers' PDF.
+
+After updating the plugin, run `/reload-plugins` (or restart Claude Code).
+
 ## What's inside
 
 A single plugin, `lovable-agents`, bundling:
